@@ -4,10 +4,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
     private final HashMap<Long, User> users = new HashMap<>();
+    private long id = 1;
 
     @Override
     public Collection<User> getAllUsers() {
@@ -16,24 +18,31 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User addUser(User user) {
-        users.put(user.getId(), user);
+        user.setId(id);
+        users.put(id, user);
+        id++;
         return user;
     }
 
     @Override
-    public User getUserById(long id) {
-        return users.get(id);
+    public Optional<User> getUserById(long id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override
-    public User updateUser(User user) {
-        users.compute(user.getId(), );
-        return user;
+    public User updateUser(User updatedUser) {
+        users.put(updatedUser.getId(), updatedUser);
+        return updatedUser;
     }
 
     @Override
     public long removeUserById(long id) {
         users.remove(id);
         return id;
+    }
+
+    @Override
+    public boolean checkUserById(long id) {
+        return users.containsKey(id);
     }
 }

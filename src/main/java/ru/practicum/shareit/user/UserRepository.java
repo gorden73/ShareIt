@@ -1,6 +1,9 @@
 package ru.practicum.shareit.user;
 
+import ru.practicum.shareit.item.Item;
+
 import java.util.Collection;
+import java.util.Optional;
 
 
 public interface UserRepository {
@@ -8,9 +11,11 @@ public interface UserRepository {
 
     User addUser(User user);
 
-    User getUserById(long id);
+    Optional<User> getUserById(long id);
 
-    User updateUser(User user);
+    User updateUser(User updatedUser);
 
     long removeUserById(long id);
+
+    boolean checkUserById(long id);
 }

@@ -1,5 +1,5 @@
 package ru.practicum.shareit.item;
 
-public enum BookingStatus {
+public enum Status {
     WAITING, APPROVED, REJECTED, CANCELED
 }

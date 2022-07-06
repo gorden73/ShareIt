@@ -71,6 +71,7 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("item.isAvailable = null");
         }
     }
+
     private void checkUserById(long userId) {
         if (!userRepository.checkUserById(userId)) {
             throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
@@ -81,5 +82,11 @@ public class ItemServiceImpl implements ItemService {
     public Collection<Item> getUserItems(long userId) {
         checkUserById(userId);
         return itemRepository.getUserItems(userId);
+    }
+
+    @Override
+    public Collection<Item> searchAvailableItems(String text) {
+        log.info("Поиск вещей по запросу - {}.", text);
+        return itemRepository.searchAvailableItems(text.toLowerCase());
     }
 }

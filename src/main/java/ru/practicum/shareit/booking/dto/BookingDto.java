@@ -1,10 +1,8 @@
 package ru.practicum.shareit.booking.dto;
 
 import lombok.Data;
-import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.item.Status;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,14 +20,5 @@ public class BookingDto {
         this.item = item;
         this.booker = booker;
         this.status = status;
-    }
-
-    public static BookingDto toBookingDto(Booking booking) {
-        return new BookingDto(
-                booking.getStart(),
-                booking.getEnd(),
-                booking.getItem().getId(),
-                booking.getBooker().getId(),
-                booking.getStatus());
     }
 }

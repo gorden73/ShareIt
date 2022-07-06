@@ -10,4 +10,6 @@ public interface ItemService {
     Item getItemById(long id);
 
     Collection<Item> getUserItems(long userId);
+
+    Collection<Item> searchAvailableItems(String text);
 }

@@ -7,6 +7,7 @@ import ru.practicum.shareit.item.dto.ItemMapper;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemController {
     private final ItemService itemService;
+
     @PostMapping
     public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
                            @RequestBody ItemDto itemDto) {
@@ -38,6 +40,17 @@ public class ItemController {
     @GetMapping
     public Collection<ItemDto> getUserItems(@RequestHeader("X-Sharer-User-Id") @NotNull long userId) {
         return itemService.getUserItems(userId)
+                .stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/search")
+    public Collection<ItemDto> searchAvailableItems(@RequestParam String text) {
+        if (text.isBlank()) {
+            return List.of();
+        }
+        return itemService.searchAvailableItems(text)
                 .stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());

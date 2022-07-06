@@ -28,18 +28,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            throw new ValidationException(String.format("user.Email = null или состоит из пробелов"));
+            throw new ValidationException(String.format("user.Email = null или состоит из пробелов."));
         }
         checkEmailAvailability(user.getEmail());
         return userRepository.addUser(user);
     }
 
-
     @Override
     public User getUserById(long id) {
         Optional<User> optionalUser = userRepository.getUserById(id);
         if (optionalUser.isEmpty()) {
-            throw new ElementNotFoundException(String.format("Не найден пользователь с id%d", id));
+            throw new ElementNotFoundException(String.format("Не найден пользователь с id%d.", id));
         }
         return optionalUser.get();
     }
@@ -67,7 +66,7 @@ public class UserServiceImpl implements UserService {
             InternetAddress emailAddr = new InternetAddress(email);
             emailAddr.validate();
         } catch (AddressException ex) {
-            throw new ValidationException(String.format("user.Email невалидный"));
+            throw new ValidationException(String.format("user.Email не в формате email."));
         }
     }
 

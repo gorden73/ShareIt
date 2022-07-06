@@ -17,7 +17,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleBadRequestException(final ValidationException e) {
-        log.error("Неверный параметр, {}.", e.getMessage());
+        log.error("Неверный параметр, {}", e.getMessage());
         return Map.of("error", String.format("Неверный параметр %s", e.getMessage()));
     }
 

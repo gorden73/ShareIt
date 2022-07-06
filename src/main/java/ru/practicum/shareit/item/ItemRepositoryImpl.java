@@ -3,7 +3,10 @@ package ru.practicum.shareit.item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -37,10 +40,19 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public Collection<Item> getUserItems(long userId) {
         log.info("Запрошен список вещей пользователя {}.", userId);
-         List<Item> itm = items.values()
+        return items.values()
                 .stream()
-                .filter(i -> (i.getId() == (userId)))
+                .filter(i -> i.getOwner().getId() == userId)
                 .collect(Collectors.toList());
-        return itm;
+    }
+
+    @Override
+    public Collection<Item> searchAvailableItems(String text) {
+        return items.values()
+                .stream()
+                .filter(i -> ((i.getName().toLowerCase().contains(text))
+                        || (i.getDescription().toLowerCase().contains(text)))
+                        && i.getAvailable().equals(true))
+                .collect(Collectors.toList());
     }
 }

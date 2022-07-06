@@ -1,7 +1,6 @@
 package ru.practicum.shareit.requests.dto;
 
 import lombok.Data;
-import ru.practicum.shareit.requests.ItemRequest;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -19,11 +18,5 @@ public class ItemRequestDto {
         this.description = description;
         this.requestor = requestor;
         this.created = created;
-    }
-    public static ItemRequestDto toItemRequestDto(ItemRequest item) {
-        return new ItemRequestDto(
-                item.getDescription(),
-                item.getRequestor().getId(),
-                item.getCreated());
     }
 }

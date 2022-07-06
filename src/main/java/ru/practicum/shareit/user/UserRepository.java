@@ -1,10 +1,7 @@
 package ru.practicum.shareit.user;
 
-import ru.practicum.shareit.item.Item;
-
 import java.util.Collection;
 import java.util.Optional;
-
 
 public interface UserRepository {
     Collection<User> getAllUsers();

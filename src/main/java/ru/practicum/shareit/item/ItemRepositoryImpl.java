@@ -11,11 +11,10 @@ import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
-public class ItemRepositoryImpl implements ItemRepository {
+public class ItemRepositoryImpl {
     private final Map<Long, Item> items = new HashMap<>();
     private long id = 1;
 
-    @Override
     public Item addItem(Item item) {
         item.setId(id);
         items.put(id, item);
@@ -24,20 +23,17 @@ public class ItemRepositoryImpl implements ItemRepository {
         return item;
     }
 
-    @Override
     public Optional<Item> getItemById(long id) {
         log.info("Запрошена вещь id{}.");
         return Optional.ofNullable(items.get(id));
     }
 
-    @Override
     public Item updateItem(Item item) {
         items.put(item.getId(), item);
         log.info("Обновлены данные вещи id{} пользователя id{}.", item.getId(), item.getOwner().getId());
         return item;
     }
 
-    @Override
     public Collection<Item> getUserItems(long userId) {
         log.info("Запрошен список вещей пользователя {}.", userId);
         return items.values()
@@ -46,7 +42,6 @@ public class ItemRepositoryImpl implements ItemRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public Collection<Item> searchAvailableItems(String text) {
         return items.values()
                 .stream()

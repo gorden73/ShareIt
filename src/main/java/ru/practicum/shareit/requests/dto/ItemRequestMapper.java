@@ -6,7 +6,7 @@ public class ItemRequestMapper {
     public static ItemRequestDto toItemRequestDto(ItemRequest item) {
         return new ItemRequestDto(
                 item.getDescription(),
-                item.getRequestor().getId(),
+                item.getRequester().getId(),
                 item.getCreated());
     }
 }

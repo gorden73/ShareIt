@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
@@ -9,22 +10,32 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
+    @Autowired
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+        this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
+    }
+
     @Override
     public Item addItem(long userId, Item item) {
-        checkUserById(userId);
         checkInputDataByAddItem(item);
-        User user = userRepository.getUserById(userId).get();
-        item.setOwner(user);
-        return itemRepository.addItem(item);
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
+        }
+        item.setOwner(user.get());
+        log.info("Добавлена новая вещь {} пользователя id{}.", item, item.getOwner().getId());
+        return itemRepository.save(item);
     }
 
     @Override
@@ -47,13 +58,15 @@ public class ItemServiceImpl implements ItemService {
         if (updatedItem.getAvailable() != null) {
             item.setAvailable(updatedItem.getAvailable());
         }
-        return itemRepository.updateItem(item);
+        log.info("Обновлены данные вещи id{} пользователя id{}.", item.getId(), item.getOwner().getId());
+        return itemRepository.save(item);
     }
 
     @Override
     public Item getItemById(long id) {
-        Optional<Item> item = itemRepository.getItemById(id);
+        Optional<Item> item = itemRepository.findById(id);
         if (item.isEmpty()) {
+            log.error("Вещь с id{} не найдена.", id);
             throw new ElementNotFoundException(String.format("вещь с id%d.", id));
         }
         log.info(String.format("Запрошена вещь с id%d", id));
@@ -73,7 +86,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void checkUserById(long userId) {
-        if (!userRepository.checkUserById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
         }
     }
@@ -81,7 +94,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<Item> getUserItems(long userId) {
         checkUserById(userId);
-        return itemRepository.getUserItems(userId);
+        log.info("Запрошен список вещей пользователя {}.", userId);
+        return itemRepository.findItemsByOwnerId(userId);
     }
 
     @Override

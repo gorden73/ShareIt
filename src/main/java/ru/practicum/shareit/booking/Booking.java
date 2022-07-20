@@ -21,18 +21,27 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "stard_date_time")
+    @Column(name = "start_date_time")
     private LocalDateTime start;
     @Column(name = "end_date_time")
     private LocalDateTime end;
     @ManyToOne
-    @NotNull
-    @Column(name = "item_id")
+    @JoinColumn(name = "item_id")
     private Item item;
+    @Transient
+    private long itemId;
     @ManyToOne
-    @NotNull
-    @Column(name = "booker_id")
+    @JoinColumn(name = "booker_id")
     private User booker;
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    public Booking() {
+    }
+
+    public Booking(LocalDateTime start, LocalDateTime end, long itemId) {
+        this.start = start;
+        this.end = end;
+        this.itemId = itemId;
+    }
 }

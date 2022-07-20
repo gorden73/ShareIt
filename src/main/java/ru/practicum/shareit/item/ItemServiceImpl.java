@@ -1,17 +1,16 @@
 package ru.practicum.shareit.item;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,11 +18,16 @@ import java.util.Optional;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
+                           BookingRepository bookingRepository, CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
@@ -55,8 +59,8 @@ public class ItemServiceImpl implements ItemService {
                 item.setDescription(updatedItem.getDescription());
             }
         }
-        if (updatedItem.getAvailable() != null) {
-            item.setAvailable(updatedItem.getAvailable());
+        if (updatedItem.getIsAvailable() != null) {
+            item.setIsAvailable(updatedItem.getIsAvailable());
         }
         log.info("Обновлены данные вещи id{} пользователя id{}.", item.getId(), item.getOwner().getId());
         return itemRepository.save(item);
@@ -80,7 +84,7 @@ public class ItemServiceImpl implements ItemService {
         if (item.getDescription() == null || item.getDescription().isBlank()) {
             throw new ValidationException("item.Description = null");
         }
-        if (item.getAvailable() == null) {
+        if (item.getIsAvailable() == null) {
             throw new ValidationException("item.isAvailable = null");
         }
     }
@@ -102,5 +106,17 @@ public class ItemServiceImpl implements ItemService {
     public Collection<Item> searchAvailableItems(String text) {
         log.info("Поиск вещей по запросу - {}.", text);
         return itemRepository.searchAvailableItems(text.toLowerCase());
+    }
+
+    @Override
+    public Comment addCommentByItemId(Comment comment, long itemId) {
+        Optional<Item> item = itemRepository.findById(itemId);
+        if (item.isEmpty()) {
+            log.error("Не найдена вещь с id{}.", itemId);
+            throw new ElementNotFoundException(String.format("вещь с id%d.", itemId));
+        }
+        comment.setItem(item.get());
+        comment.setCreated(LocalDateTime.now());
+        return commentRepository.save(comment);
     }
 }

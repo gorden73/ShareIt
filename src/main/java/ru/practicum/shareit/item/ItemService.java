@@ -1,5 +1,7 @@
 package ru.practicum.shareit.item;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
 import java.util.Collection;
 
 public interface ItemService {
@@ -12,4 +14,6 @@ public interface ItemService {
     Collection<Item> getUserItems(long userId);
 
     Collection<Item> searchAvailableItems(String text);
+
+    Comment addCommentByItemId(Comment comment, long itemId);
 }

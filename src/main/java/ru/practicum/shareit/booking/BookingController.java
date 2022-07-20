@@ -7,6 +7,7 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,15 +46,17 @@ public class BookingController {
         return bookingService.getAllBookingsByUserId(userId, state)
                 .stream()
                 .map(BookingMapper::toBookingDto)
+                .sorted(Comparator.comparing(BookingDto::getStart).reversed())
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/owner")
     public Collection<BookingDto> getAllBookingsByOwnerId(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
                                                          @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getAllBookingsByUserId(userId, state)
+        return bookingService.getAllBookingsByOwnerId(userId, state)
                 .stream()
                 .map(BookingMapper::toBookingDto)
+                .sorted(Comparator.comparing(BookingDto::getStart).reversed())
                 .collect(Collectors.toList());
     }
 }

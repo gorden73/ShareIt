@@ -3,6 +3,7 @@ package ru.practicum.shareit.item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
@@ -11,7 +12,9 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,7 +48,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item updateItem(long userId, long itemId, Item updatedItem) {
         checkUserById(userId);
-        Item item = getItemById(itemId);
+        Item item = getItemById(userId, itemId);
         if (item.getOwner().getId() != userId) {
             throw new ElementNotFoundException(String.format("вещь id%d у пользователя с id%d.", item.getId(), userId));
         }
@@ -67,14 +70,34 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item getItemById(long id) {
+    public Item getItemById(long userId, long id) {
         Optional<Item> item = itemRepository.findById(id);
         if (item.isEmpty()) {
             log.error("Вещь с id{} не найдена.", id);
             throw new ElementNotFoundException(String.format("вещь с id%d.", id));
         }
+        Item item1 = item.get();
+        if (item1.getOwner().getId() == userId) {
+            log.info(String.format("Запрошена вещь с id%d", id));
+            return addIntoItemLastAndNextBookings(item1);
+        }
         log.info(String.format("Запрошена вещь с id%d", id));
-        return item.get();
+        return item1;
+    }
+
+    private Item addIntoItemLastAndNextBookings(Item item) {
+        Collection<Booking> itemsBookings = bookingRepository.findBookingsByItem_Id(item.getId());
+        if (!itemsBookings.isEmpty()) {
+            Optional<Booking> lastBooking = itemsBookings.stream()
+                    .filter(i -> i.getEnd().isBefore(LocalDateTime.now()))
+                    .findFirst();
+            lastBooking.ifPresent(item::setLastBooking);
+            Optional<Booking> nextBooking = itemsBookings.stream()
+                    .filter(i -> i.getStart().isAfter(LocalDateTime.now()))
+                    .findFirst();
+            nextBooking.ifPresent(item::setNextBooking);
+        }
+        return item;
     }
 
     private void checkInputDataByAddItem(Item item) {
@@ -96,20 +119,34 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<Item> getUserItems(long userId) {
-        checkUserById(userId);
-        log.info("Запрошен список вещей пользователя {}.", userId);
-        return itemRepository.findItemsByOwnerId(userId);
+    public Collection<Item> getOwnerItems(long ownerId) {
+        checkUserById(ownerId);
+        log.info("Запрошен список вещей пользователя {}.", ownerId);
+        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId);
+        if (ownerItems.isEmpty()) {
+            return List.of();
+        }
+        return ownerItems.stream()
+                .map(this::addIntoItemLastAndNextBookings)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Item> searchAvailableItems(String text) {
+        if (text.isBlank()) {
+            log.info("Пустой поисковый запрос.");
+            return List.of();
+        }
         log.info("Поиск вещей по запросу - {}.", text);
         return itemRepository.searchAvailableItems(text.toLowerCase());
     }
 
     @Override
     public Comment addCommentByItemId(Comment comment, long itemId) {
+        if (comment.getText().isBlank()) {
+            log.error("Отзыв пустой или состоит из пробелов.");
+            throw new ValidationException("отзыв пустой или состоит из пробелов.");
+        }
         Optional<Item> item = itemRepository.findById(itemId);
         if (item.isEmpty()) {
             log.error("Не найдена вещь с id{}.", itemId);
@@ -117,6 +154,7 @@ public class ItemServiceImpl implements ItemService {
         }
         comment.setItem(item.get());
         comment.setCreated(LocalDateTime.now());
+        log.info("Добавлен новый комментарий к вещи id{}.", itemId);
         return commentRepository.save(comment);
     }
 }

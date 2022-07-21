@@ -131,16 +131,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<Booking> getAllBookingsByUserId(long bookerId, String state) {
+    public Collection<Booking> getAllBookingsByUserId(long bookerId, String status) {
         Optional<User> user = userRepository.findById(bookerId);
         if (user.isEmpty()) {
-            log.error("Не найден пользователь с id{}.", bookerId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", bookerId));
+            log.error("Не найден арендатор с id{}.", bookerId);
+            throw new ElementNotFoundException(String.format("арендатор с таким id%d.", bookerId));
         }
-        if (state.equals("ALL")) {
+        String status1 = status.toUpperCase();
+        if (status1.equals("ALL")) {
+            log.info("Запрошен список всех бронирований арендатора id{}.", bookerId);
             return bookingRepository.findBookingsByBooker_Id(bookerId);
+        } else {
+            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED").contains(status1)) {
+                log.error("Введено неверное значение статуса {}.", status1);
+                throw new ValidationException("значение статуса может быть только CURRENT, PAST, FUTURE, WAITING, " +
+                        "REJECTED");
+            }
+            log.info("Запрошен список бронирований арендатора id{} со статусом {}.", bookerId, status1);
+            return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(status1));
         }
-        return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(state));
     }
 
     @Override
@@ -148,11 +157,11 @@ public class BookingServiceImpl implements BookingService {
         Optional<User> user = userRepository.findById(ownerId);
         String status1 = status.toUpperCase();
         if (user.isEmpty()) {
-            log.error("Не найден пользователь с id{}.", ownerId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", ownerId));
+            log.error("Не найден владелец с id{}.", ownerId);
+            throw new ElementNotFoundException(String.format("владелец с таким id%d.", ownerId));
         }
         if (status1.equals("ALL")) {
-            log.info("Запрошен список всех бронирований пользователя id{}.", ownerId);
+            log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
             return bookingRepository.findBookingsByOwnerId(ownerId);
         } else {
             if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED").contains(status1)) {
@@ -160,7 +169,7 @@ public class BookingServiceImpl implements BookingService {
                 throw new ValidationException("значение статуса может быть только CURRENT, PAST, FUTURE, WAITING, " +
                         "REJECTED");
             }
-            log.info("Запрошен список бронирований пользователя id{} со статусом {}.", ownerId, status1);
+            log.info("Запрошен список бронирований владельца id{} со статусом {}.", ownerId, status1);
             return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status1));
         }
     }

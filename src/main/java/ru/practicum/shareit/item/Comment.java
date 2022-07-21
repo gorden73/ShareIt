@@ -19,10 +19,10 @@ public class Comment {
     private long id;
     private String text;
     @ManyToOne
-    @Column(name = "item_id")
+    @JoinColumn(name = "item_id")
     private Item item;
     @ManyToOne
-    @Column(name = "author_id")
+    @JoinColumn(name = "author_id")
     private User author;
     private LocalDateTime created;
 

@@ -12,20 +12,33 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getIsAvailable(),
-                item.getOwner().getId()
+                item.getIsAvailable()
         );
     }
 
     public static ItemOwnerDto toItemOwnerDto(Item item) {
-        return new ItemOwnerDto(
+        ItemOwnerDto dto = new ItemOwnerDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getIsAvailable(),
-                BookingMapper.toBookingDto(item.getLastBooking()),
-                BookingMapper.toBookingDto(item.getNextBooking())
+                item.getIsAvailable()
         );
+        if (item.getRequest() != null) {
+            dto.setRequest(item.getRequest().getId());
+        }
+        if (item.getLastBooking() == null && item.getNextBooking() != null) {
+            dto.setNextBooking(BookingMapper.toBookingOwnerDto(item.getNextBooking()));
+            return dto;
+        } else if (item.getLastBooking() != null && item.getNextBooking() == null) {
+            dto.setLastBooking(BookingMapper.toBookingOwnerDto(item.getLastBooking()));
+            return dto;
+        } else if (item.getLastBooking() == null && item.getNextBooking() == null) {
+            return dto;
+        } else {
+            dto.setLastBooking(BookingMapper.toBookingOwnerDto(item.getLastBooking()));
+            dto.setNextBooking(BookingMapper.toBookingOwnerDto(item.getNextBooking()));
+            return dto;
+        }
     }
 
     public static Item toItem(ItemDto itemDto) {

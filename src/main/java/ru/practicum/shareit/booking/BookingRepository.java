@@ -11,16 +11,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Collection<Booking> findBookingsByBooker_IdAndStatus(long bookerId, Status status);
 
-    @Query ("select b from Booking b " +
+    @Query("select b from Booking b " +
             "left join Item i on b.item.id = i.id " +
             "where i.owner.id = ?1")
     Collection<Booking> findBookingsByOwnerId(long ownerId);
 
-    @Query ("select b from Booking b " +
+    @Query("select b from Booking b " +
             "left join Item i on b.item.id = i.id " +
             "where i.owner.id = ?1 " +
             "and b.status = ?2")
     Collection<Booking> findBookingsByOwnerIdAndStatus(long ownerId, Status status);
 
-    Collection<Booking>findBookingsByItem_Id(long itemId);
+    Collection<Booking> findBookingsByItem_Id(long itemId);
 }

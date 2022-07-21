@@ -1,7 +1,5 @@
 package ru.practicum.shareit.item;
 
-import org.springframework.web.bind.annotation.PathVariable;
-
 import java.util.Collection;
 
 public interface ItemService {
@@ -9,9 +7,9 @@ public interface ItemService {
 
     Item updateItem(long userId, long itemId, Item updatedItem);
 
-    Item getItemById(long id);
+    Item getItemById(long userId, long id);
 
-    Collection<Item> getUserItems(long userId);
+    Collection<Item> getOwnerItems(long ownerId);
 
     Collection<Item> searchAvailableItems(String text);
 

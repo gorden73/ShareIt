@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.dto;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.shareit.item.Status;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @EqualsAndHashCode
+@NoArgsConstructor
 public class BookingDto {
     private long id;
     private LocalDateTime start;
@@ -20,9 +22,6 @@ public class BookingDto {
     private long itemId;
     private UserDto booker;
     private ItemDto item;
-
-    public BookingDto() {
-    }
 
     public BookingDto(long id, LocalDateTime start, LocalDateTime end, Status status, UserDto booker,
                       ItemDto item) {

@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
             InternetAddress emailAddr = new InternetAddress(email);
             emailAddr.validate();
         } catch (AddressException ex) {
-            throw new ValidationException(String.format("user.Email не в формате email."));
+            throw new ValidationException("user.Email не в формате email.");
         }
     }
 }

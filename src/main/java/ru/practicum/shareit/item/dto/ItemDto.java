@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 @EqualsAndHashCode
 public class ItemDto extends ItemOwnerDto {
-
     public ItemDto(long id, String name, String description, Boolean available) {
         super(id, name, description, available);
     }

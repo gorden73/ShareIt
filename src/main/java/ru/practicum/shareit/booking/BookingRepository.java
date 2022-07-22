@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.item.Status;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -23,4 +24,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Collection<Booking> findBookingsByOwnerIdAndStatus(long ownerId, Status status);
 
     Collection<Booking> findBookingsByItem_Id(long itemId);
+
+    Collection<Booking> findByItem_IdAndBooker_IdAndEndBefore(long itemId, long bookerId, LocalDateTime time);
 }

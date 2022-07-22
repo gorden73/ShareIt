@@ -5,18 +5,6 @@ import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.user.dto.UserMapper;
 
 public class BookingMapper {
-    /*public static BookingDto toBookingDto(Booking booking) {
-        return new BookingDto(
-                booking.getId(),
-                booking.getStart(),
-                booking.getEnd(),
-                booking.getStatus(),
-                booking.getBooker().getId(),
-                booking.getItem().getId(),
-                booking.getItem().getName()
-                );
-    }*/
-
     public static BookingOwnerDto toBookingOwnerDto(Booking booking) {
         return new BookingOwnerDto(
                 booking.getId(),

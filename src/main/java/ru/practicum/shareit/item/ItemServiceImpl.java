@@ -79,10 +79,16 @@ public class ItemServiceImpl implements ItemService {
         Item item1 = item.get();
         if (item1.getOwner().getId() == userId) {
             log.info(String.format("Запрошена вещь с id%d", id));
-            return addIntoItemLastAndNextBookings(item1);
+            return addIntoItemLastAndNextBookings(addCommentsIntoItem(item1));
         }
         log.info(String.format("Запрошена вещь с id%d", id));
-        return item1;
+        return addCommentsIntoItem(item1);
+    }
+
+    private Item addCommentsIntoItem(Item item) {
+        List<Comment> comments = commentRepository.findAllByItem_Id(item.getId());
+        item.setComments(comments);
+        return item;
     }
 
     private Item addIntoItemLastAndNextBookings(Item item) {
@@ -127,6 +133,7 @@ public class ItemServiceImpl implements ItemService {
             return List.of();
         }
         return ownerItems.stream()
+                .map(this::addCommentsIntoItem)
                 .map(this::addIntoItemLastAndNextBookings)
                 .collect(Collectors.toList());
     }
@@ -138,21 +145,35 @@ public class ItemServiceImpl implements ItemService {
             return List.of();
         }
         log.info("Поиск вещей по запросу - {}.", text);
-        return itemRepository.searchAvailableItems(text.toLowerCase());
+        return itemRepository.searchAvailableItems(text);
     }
 
     @Override
-    public Comment addCommentByItemId(Comment comment, long itemId) {
+    public Comment addCommentByItemId(long bookerId, Comment comment, long itemId) {
         if (comment.getText().isBlank()) {
             log.error("Отзыв пустой или состоит из пробелов.");
             throw new ValidationException("отзыв пустой или состоит из пробелов.");
+        }
+        Optional<User> booker = userRepository.findById(bookerId);
+        if (booker.isEmpty()) {
+            log.error("Пользователь с id{} не найден.", bookerId);
+            throw new ElementNotFoundException(String.format("пользователь с id%d не найден.", bookerId));
         }
         Optional<Item> item = itemRepository.findById(itemId);
         if (item.isEmpty()) {
             log.error("Не найдена вещь с id{}.", itemId);
             throw new ElementNotFoundException(String.format("вещь с id%d.", itemId));
         }
-        comment.setItem(item.get());
+        Item item1 = item.get();
+        Collection<Booking> booking = bookingRepository.findByItem_IdAndBooker_IdAndEndBefore(itemId, bookerId,
+                LocalDateTime.now());
+        if (booking.isEmpty()) {
+            log.error("Пользователь id{} не может оставить отзыв на вещь id{}.", bookerId, itemId);
+            throw new ValidationException(String.format("пользователь id%d не может оставить отзыв на вещь " +
+                    "id%d.", bookerId, itemId));
+        }
+        comment.setAuthor(booker.get());
+        comment.setItem(item1);
         comment.setCreated(LocalDateTime.now());
         log.info("Добавлен новый комментарий к вещи id{}.", itemId);
         return commentRepository.save(comment);

@@ -2,18 +2,22 @@ package ru.practicum.shareit.item;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.requests.ItemRequest;
 import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @EqualsAndHashCode
 @Entity
 @Table(name = "items")
+@NoArgsConstructor
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +36,8 @@ public class Item {
     private Booking lastBooking;
     @Transient
     private Booking nextBooking;
-
-    public Item() {
-    }
+    @Transient
+    private List<Comment> comments = new ArrayList<>();
 
     public Item(String name, String description, Boolean available) {
         this.name = name;

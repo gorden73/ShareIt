@@ -5,15 +5,22 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.item.Comment;
 import ru.practicum.shareit.item.Item;
 
+import java.util.stream.Collectors;
+
 @Component
 public class ItemMapper {
     public static ItemDto toItemDto(Item item) {
-        return new ItemDto(
+        ItemDto dto = new ItemDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getIsAvailable()
         );
+        dto.setComments(item.getComments()
+                .stream()
+                .map(ItemMapper::toCommentDto)
+                .collect(Collectors.toList()));
+        return dto;
     }
 
     public static ItemOwnerDto toItemOwnerDto(Item item) {
@@ -23,6 +30,10 @@ public class ItemMapper {
                 item.getDescription(),
                 item.getIsAvailable()
         );
+        dto.setComments(item.getComments()
+                .stream()
+                .map(ItemMapper::toCommentDto)
+                .collect(Collectors.toList()));
         if (item.getRequest() != null) {
             dto.setRequest(item.getRequest().getId());
         }
@@ -53,8 +64,7 @@ public class ItemMapper {
         return new CommentDto(
                 comment.getId(),
                 comment.getText(),
-                comment.getItem(),
-                comment.getAuthor(),
+                comment.getAuthor().getName(),
                 comment.getCreated());
     }
 

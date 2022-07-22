@@ -13,5 +13,5 @@ public interface ItemService {
 
     Collection<Item> searchAvailableItems(String text);
 
-    Comment addCommentByItemId(Comment comment, long itemId);
+    Comment addCommentByItemId(long userId, Comment comment, long itemId);
 }

@@ -35,8 +35,6 @@ CREATE TABLE IF NOT EXISTS bookings (
   item_id BIGINT,
   booker_id BIGINT,
   status varchar(50),
-  --approved BOOLEAN NOT NULL,
-  --canceled BOOLEAN NOT NULL,
   CONSTRAINT pk_booking PRIMARY KEY (id),
   CONSTRAINT FK_BOOKING_ON_BOOKER FOREIGN KEY (booker_id) REFERENCES users (id),
   CONSTRAINT FK_BOOKING_ON_ITEM FOREIGN KEY (item_id) REFERENCES items (id)

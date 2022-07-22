@@ -3,8 +3,6 @@ package ru.practicum.shareit.item.dto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
 
@@ -14,15 +12,13 @@ import java.time.LocalDateTime;
 public class CommentDto {
     private long id;
     private String text;
-    private Item item;
-    private User author;
+    private String authorName;
     private LocalDateTime created;
 
-    public CommentDto(long id, String text, Item item, User author, LocalDateTime created) {
+    public CommentDto(long id, String text, String authorName, LocalDateTime created) {
         this.id = id;
         this.text = text;
-        this.item = item;
-        this.author = author;
+        this.authorName = authorName;
         this.created = created;
     }
 }

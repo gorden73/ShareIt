@@ -62,6 +62,10 @@ public class BookingServiceImpl implements BookingService {
             log.error("Время окончания бронирования в прошлом.");
             throw new ValidationException("время окончания бронирования в прошлом.");
         }
+        if (booking.getStart().isAfter(booking.getEnd())) {
+            log.error("Время начала бронирования позже времени окончания бронирования.");
+            throw new ValidationException("время начала бронирования позже времени окончания бронирования.");
+        }
         booking.setStatus(Status.WAITING);
         return bookingRepository.save(booking);
     }

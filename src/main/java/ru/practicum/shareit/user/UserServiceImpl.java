@@ -11,12 +11,11 @@ import ru.practicum.shareit.exceptions.ValidationException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import java.util.Collection;
-import java.util.Optional;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
@@ -48,11 +47,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserById(long id) {
         log.info(String.format("Запрошен пользователь с id%d.", id));
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isEmpty()) {
-            throw new ElementNotFoundException(String.format("пользователь с id%d.", id));
-        }
-        return optionalUser.get();
+        return userRepository.findById(id).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с id%d.", id)));
     }
 
     @Override

@@ -36,11 +36,9 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item addItem(long userId, Item item) {
         checkInputDataByAddItem(item);
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
-        item.setOwner(user.get());
+        User user = userRepository.findById(userId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с таким id%d.", userId)));
+        item.setOwner(user);
         log.info("Добавлена новая вещь {} пользователя id{}.", item, item.getOwner().getId());
         return itemRepository.save(item);
     }
@@ -71,18 +69,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item getItemById(long userId, long id) {
-        Optional<Item> item = itemRepository.findById(id);
-        if (item.isEmpty()) {
-            log.error("Вещь с id{} не найдена.", id);
-            throw new ElementNotFoundException(String.format("вещь с id%d.", id));
-        }
-        Item item1 = item.get();
-        if (item1.getOwner().getId() == userId) {
+        Item item = itemRepository.findById(id).orElseThrow(() -> new ElementNotFoundException(
+                String.format("вещь с id%d.", id)));
+        if (item.getOwner().getId() == userId) {
             log.info(String.format("Запрошена вещь с id%d", id));
-            return addIntoItemLastAndNextBookings(addCommentsIntoItem(item1));
+            return addIntoItemLastAndNextBookings(addCommentsIntoItem(item));
         }
         log.info(String.format("Запрошена вещь с id%d", id));
-        return addCommentsIntoItem(item1);
+        return addCommentsIntoItem(item);
     }
 
     private Item addCommentsIntoItem(Item item) {
@@ -154,17 +148,10 @@ public class ItemServiceImpl implements ItemService {
             log.error("Отзыв пустой или состоит из пробелов.");
             throw new ValidationException("отзыв пустой или состоит из пробелов.");
         }
-        Optional<User> booker = userRepository.findById(bookerId);
-        if (booker.isEmpty()) {
-            log.error("Пользователь с id{} не найден.", bookerId);
-            throw new ElementNotFoundException(String.format("пользователь с id%d не найден.", bookerId));
-        }
-        Optional<Item> item = itemRepository.findById(itemId);
-        if (item.isEmpty()) {
-            log.error("Не найдена вещь с id{}.", itemId);
-            throw new ElementNotFoundException(String.format("вещь с id%d.", itemId));
-        }
-        Item item1 = item.get();
+        User booker = userRepository.findById(bookerId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с id%d не найден.", bookerId)));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ElementNotFoundException(String.format(
+                "вещь с id%d.", itemId)));
         Collection<Booking> booking = bookingRepository.findByItem_IdAndBooker_IdAndEndBefore(itemId, bookerId,
                 LocalDateTime.now());
         if (booking.isEmpty()) {
@@ -172,8 +159,8 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException(String.format("пользователь id%d не может оставить отзыв на вещь " +
                     "id%d.", bookerId, itemId));
         }
-        comment.setAuthor(booker.get());
-        comment.setItem(item1);
+        comment.setAuthor(booker);
+        comment.setItem(item);
         comment.setCreated(LocalDateTime.now());
         log.info("Добавлен новый комментарий к вещи id{}.", itemId);
         return commentRepository.save(comment);

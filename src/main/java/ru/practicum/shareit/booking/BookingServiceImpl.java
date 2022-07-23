@@ -14,14 +14,13 @@ import ru.practicum.shareit.user.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
 public class BookingServiceImpl implements BookingService {
-    UserRepository userRepository;
-    ItemRepository itemRepository;
-    BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
+    private final BookingRepository bookingRepository;
 
     @Autowired
     public BookingServiceImpl(UserRepository userRepository, ItemRepository itemRepository,
@@ -33,22 +32,16 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking addBooking(long userId, Booking booking) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
-            log.error("Не найден пользователь с id{}.", userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
-        Optional<Item> item = itemRepository.findById(booking.getItemId());
-        if (item.isEmpty()) {
-            log.error("Не найдена вещь с id{}.", booking.getItemId());
-            throw new ElementNotFoundException(String.format("вещь с id%d.", booking.getItemId()));
-        }
-        booking.setItem(item.get());
-        if (user.get().equals(booking.getItem().getOwner())) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с таким id%d.", userId)));
+        Item item = itemRepository.findById(booking.getItemId()).orElseThrow(() -> new ElementNotFoundException(
+                String.format("вещь с id%d.", booking.getItemId())));
+        booking.setItem(item);
+        if (user.equals(booking.getItem().getOwner())) {
             log.error("Владелец вещи не может арендовать сам у себя.");
             throw new ElementNotFoundException("Владелец вещи не может арендовать сам у себя.");
         }
-        booking.setBooker(user.get());
+        booking.setBooker(user);
         if (!booking.getItem().getIsAvailable()) {
             log.error("Бронирование вещи id{} недоступно.", booking.getItem().getId());
             throw new ValidationException(String.format("бронирование вещи id%d недоступно.",
@@ -67,24 +60,20 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("время начала бронирования позже времени окончания бронирования.");
         }
         booking.setStatus(Status.WAITING);
+        log.info("Добавлено бронирование вещи id{}.", item.getId());
         return bookingRepository.save(booking);
     }
 
     @Override
     public Booking setApprovedByOwner(long userId, long bookingId, boolean approved) {
-        Optional<User> owner = userRepository.findById(userId);
-        if (owner.isEmpty()) {
-            log.error("Не найден пользователь с id{}.", userId);
+        if (!userRepository.existsById(userId)) {
+            log.error("Пользователь id{} не найден.", userId);
             throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
         }
-        Optional<Booking> booking = bookingRepository.findById(bookingId);
-        if (booking.isEmpty()) {
-            log.error("Не найдено бронирование с id{}.", bookingId);
-            throw new ElementNotFoundException(String.format("бронирование с таким id%d.", bookingId));
-        }
-        Booking booking1 = booking.get();
-        if (booking1.getItem().getOwner().getId() != userId) {
-            if (booking1.getBooker().getId() == userId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("бронирование с таким id%d.", bookingId)));
+        if (booking.getItem().getOwner().getId() != userId) {
+            if (booking.getBooker().getId() == userId) {
                 log.error("Арендатор id{} не имеет доступа для изменения статуса бронирования id{}.", userId,
                         bookingId);
                 throw new ElementNotFoundException(String.format("арендатор id%d не имеет доступа для изменения " +
@@ -96,38 +85,33 @@ public class BookingServiceImpl implements BookingService {
                     "статуса бронирования id%d.", userId, bookingId));
         }
         if (approved) {
-            if (booking1.getStatus().equals(Status.APPROVED)) {
+            if (booking.getStatus().equals(Status.APPROVED)) {
                 log.error("Повторное изменение статуса на идентичный не допускается.");
                 throw new ValidationException("Повторное изменение статуса на идентичный не допускается.");
             }
-            booking1.setStatus(Status.APPROVED);
-            log.info("Подтверждено бронирование id{} вещи id{}.", bookingId, booking1.getItem().getId());
+            booking.setStatus(Status.APPROVED);
+            log.info("Подтверждено бронирование id{} вещи id{}.", bookingId, booking.getItem().getId());
         } else {
-            if (booking1.getStatus().equals(Status.REJECTED)) {
+            if (booking.getStatus().equals(Status.REJECTED)) {
                 log.error("Повторное изменение статуса на идентичный не допускается.");
                 throw new ValidationException("Повторное изменение статуса на идентичный не допускается.");
             }
-            booking1.setStatus(Status.REJECTED);
-            log.info("Отклонено бронирование id{} вещи id{}.", bookingId, booking1.getItem().getId());
+            booking.setStatus(Status.REJECTED);
+            log.info("Отклонено бронирование id{} вещи id{}.", bookingId, booking.getItem().getId());
         }
-        return bookingRepository.save(booking1);
+        return bookingRepository.save(booking);
     }
 
     @Override
     public Booking getBookingById(long userId, long bookingId) {
-        Optional<User> user = userRepository.findById(userId);
-        Optional<Booking> booking = bookingRepository.findById(bookingId);
-        if (user.isEmpty()) {
-            log.error("Не найден пользователь с id{}.", userId);
+        if (!userRepository.existsById(userId)) {
+            log.error("Пользователь id{} не найден.", userId);
             throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
         }
-        if (booking.isEmpty()) {
-            log.error("Не найдено бронирование с id{}.", bookingId);
-            throw new ElementNotFoundException(String.format("бронирование с таким id%d.", bookingId));
-        }
-        Booking booking1 = booking.get();
-        if (booking1.getBooker().getId() == userId || booking1.getItem().getOwner().getId() == userId) {
-            return booking1;
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("бронирование с таким id%d.", bookingId)));
+        if (booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId) {
+            return booking;
         } else {
             throw new ElementNotFoundException(String.format("пользователь id%d не является владельцем или " +
                     "арендатором вещи.", userId));
@@ -136,9 +120,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<Booking> getAllBookingsByUserId(long bookerId, String status) {
-        Optional<User> user = userRepository.findById(bookerId);
-        if (user.isEmpty()) {
-            log.error("Не найден арендатор с id{}.", bookerId);
+        if (!userRepository.existsById(bookerId)) {
+            log.error("Пользователь id{} не найден.", bookerId);
             throw new ElementNotFoundException(String.format("арендатор с таким id%d.", bookerId));
         }
         String status1 = status.toUpperCase();
@@ -158,12 +141,11 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<Booking> getAllBookingsByOwnerId(long ownerId, String status) {
-        Optional<User> user = userRepository.findById(ownerId);
-        String status1 = status.toUpperCase();
-        if (user.isEmpty()) {
-            log.error("Не найден владелец с id{}.", ownerId);
-            throw new ElementNotFoundException(String.format("владелец с таким id%d.", ownerId));
+        if (!userRepository.existsById(ownerId)) {
+            log.error("Пользователь id{} не найден.", ownerId);
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", ownerId));
         }
+        String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
             log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
             return bookingRepository.findBookingsByOwnerId(ownerId);

@@ -2,12 +2,13 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemOwnerDto;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -32,27 +33,36 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable long itemId) {
-        Item item = itemService.getItemById(itemId);
+    public ItemOwnerDto getItemById(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
+                                    @PathVariable long itemId) {
+        Item item = itemService.getItemById(userId, itemId);
+        if (item.getOwner().getId() == userId) {
+            return ItemMapper.toItemOwnerDto(item);
+        }
         return ItemMapper.toItemDto(item);
     }
 
     @GetMapping
-    public Collection<ItemDto> getUserItems(@RequestHeader("X-Sharer-User-Id") @NotNull long userId) {
-        return itemService.getUserItems(userId)
+    public Collection<ItemOwnerDto> getOwnerItems(@RequestHeader("X-Sharer-User-Id") @NotNull long ownerId) {
+        return itemService.getOwnerItems(ownerId)
                 .stream()
-                .map(ItemMapper::toItemDto)
+                .map(ItemMapper::toItemOwnerDto)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> searchAvailableItems(@RequestParam String text) {
-        if (text.isBlank()) {
-            return List.of();
-        }
         return itemService.searchAvailableItems(text)
                 .stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addCommentByItemId(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
+                                         @RequestBody CommentDto commentDto,
+                                         @PathVariable long itemId) {
+        Comment comment = ItemMapper.toComment(commentDto);
+        return ItemMapper.toCommentDto(itemService.addCommentByItemId(userId, comment, itemId));
     }
 }

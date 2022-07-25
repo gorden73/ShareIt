@@ -1,36 +1,52 @@
 package ru.practicum.shareit.item;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
+
+    @Autowired
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
+                           BookingRepository bookingRepository, CommentRepository commentRepository) {
+        this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
+    }
 
     @Override
     public Item addItem(long userId, Item item) {
-        checkUserById(userId);
         checkInputDataByAddItem(item);
-        User user = userRepository.getUserById(userId).get();
+        User user = userRepository.findById(userId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с таким id%d.", userId)));
         item.setOwner(user);
-        return itemRepository.addItem(item);
+        log.info("Добавлена новая вещь {} пользователя id{}.", item, item.getOwner().getId());
+        return itemRepository.save(item);
     }
 
     @Override
     public Item updateItem(long userId, long itemId, Item updatedItem) {
         checkUserById(userId);
-        Item item = getItemById(itemId);
+        Item item = getItemById(userId, itemId);
         if (item.getOwner().getId() != userId) {
             throw new ElementNotFoundException(String.format("вещь id%d у пользователя с id%d.", item.getId(), userId));
         }
@@ -44,20 +60,44 @@ public class ItemServiceImpl implements ItemService {
                 item.setDescription(updatedItem.getDescription());
             }
         }
-        if (updatedItem.getAvailable() != null) {
-            item.setAvailable(updatedItem.getAvailable());
+        if (updatedItem.getIsAvailable() != null) {
+            item.setIsAvailable(updatedItem.getIsAvailable());
         }
-        return itemRepository.updateItem(item);
+        log.info("Обновлены данные вещи id{} пользователя id{}.", item.getId(), item.getOwner().getId());
+        return itemRepository.save(item);
     }
 
     @Override
-    public Item getItemById(long id) {
-        Optional<Item> item = itemRepository.getItemById(id);
-        if (item.isEmpty()) {
-            throw new ElementNotFoundException(String.format("вещь с id%d.", id));
+    public Item getItemById(long userId, long id) {
+        Item item = itemRepository.findById(id).orElseThrow(() -> new ElementNotFoundException(
+                String.format("вещь с id%d.", id)));
+        if (item.getOwner().getId() == userId) {
+            log.info(String.format("Запрошена вещь с id%d", id));
+            return addIntoItemLastAndNextBookings(addCommentsIntoItem(item));
         }
         log.info(String.format("Запрошена вещь с id%d", id));
-        return item.get();
+        return addCommentsIntoItem(item);
+    }
+
+    private Item addCommentsIntoItem(Item item) {
+        List<Comment> comments = commentRepository.findAllByItem_Id(item.getId());
+        item.setComments(comments);
+        return item;
+    }
+
+    private Item addIntoItemLastAndNextBookings(Item item) {
+        Collection<Booking> itemsBookings = bookingRepository.findBookingsByItem_Id(item.getId());
+        if (!itemsBookings.isEmpty()) {
+            Optional<Booking> lastBooking = itemsBookings.stream()
+                    .filter(i -> i.getEnd().isBefore(LocalDateTime.now()))
+                    .findFirst();
+            lastBooking.ifPresent(item::setLastBooking);
+            Optional<Booking> nextBooking = itemsBookings.stream()
+                    .filter(i -> i.getStart().isAfter(LocalDateTime.now()))
+                    .findFirst();
+            nextBooking.ifPresent(item::setNextBooking);
+        }
+        return item;
     }
 
     private void checkInputDataByAddItem(Item item) {
@@ -67,26 +107,62 @@ public class ItemServiceImpl implements ItemService {
         if (item.getDescription() == null || item.getDescription().isBlank()) {
             throw new ValidationException("item.Description = null");
         }
-        if (item.getAvailable() == null) {
+        if (item.getIsAvailable() == null) {
             throw new ValidationException("item.isAvailable = null");
         }
     }
 
     private void checkUserById(long userId) {
-        if (!userRepository.checkUserById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
         }
     }
 
     @Override
-    public Collection<Item> getUserItems(long userId) {
-        checkUserById(userId);
-        return itemRepository.getUserItems(userId);
+    public Collection<Item> getOwnerItems(long ownerId) {
+        checkUserById(ownerId);
+        log.info("Запрошен список вещей пользователя {}.", ownerId);
+        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId);
+        if (ownerItems.isEmpty()) {
+            return List.of();
+        }
+        return ownerItems.stream()
+                .map(this::addCommentsIntoItem)
+                .map(this::addIntoItemLastAndNextBookings)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Item> searchAvailableItems(String text) {
+        if (text.isBlank()) {
+            log.info("Пустой поисковый запрос.");
+            return List.of();
+        }
         log.info("Поиск вещей по запросу - {}.", text);
-        return itemRepository.searchAvailableItems(text.toLowerCase());
+        return itemRepository.searchAvailableItems(text);
+    }
+
+    @Override
+    public Comment addCommentByItemId(long bookerId, Comment comment, long itemId) {
+        if (comment.getText().isBlank()) {
+            log.error("Отзыв пустой или состоит из пробелов.");
+            throw new ValidationException("отзыв пустой или состоит из пробелов.");
+        }
+        User booker = userRepository.findById(bookerId).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с id%d не найден.", bookerId)));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ElementNotFoundException(String.format(
+                "вещь с id%d.", itemId)));
+        Collection<Booking> booking = bookingRepository.findByItem_IdAndBooker_IdAndEndBefore(itemId, bookerId,
+                LocalDateTime.now());
+        if (booking.isEmpty()) {
+            log.error("Пользователь id{} не может оставить отзыв на вещь id{}.", bookerId, itemId);
+            throw new ValidationException(String.format("пользователь id%d не может оставить отзыв на вещь " +
+                    "id%d.", bookerId, itemId));
+        }
+        comment.setAuthor(booker);
+        comment.setItem(item);
+        comment.setCreated(LocalDateTime.now());
+        log.info("Добавлен новый комментарий к вещи id{}.", itemId);
+        return commentRepository.save(comment);
     }
 }

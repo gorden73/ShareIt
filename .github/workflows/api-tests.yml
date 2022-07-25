@@ -58,4 +58,4 @@ jobs:
 
       - name: Run POSTMAN tests
         run: |
-          newman run ./tests/postman/sprint.json -r cli
+          newman run ./tests/postman/sprint.json --delay-request 50 -r cli

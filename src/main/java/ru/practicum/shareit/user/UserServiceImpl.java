@@ -1,6 +1,8 @@
 package ru.practicum.shareit.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
@@ -9,11 +11,11 @@ import ru.practicum.shareit.exceptions.ValidationException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import java.util.Collection;
-import java.util.Optional;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
@@ -22,25 +24,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Collection<User> getAllUsers() {
-        return userRepository.getAllUsers();
+        log.info("Запрошен список всех пользователей.");
+        return userRepository.findAll();
     }
 
     @Override
     public User addUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            throw new ValidationException(String.format("user.Email = null или состоит из пробелов."));
+            throw new ValidationException("user.Email = null или состоит из пробелов.");
         }
-        checkEmailAvailability(user.getEmail());
-        return userRepository.addUser(user);
+        checkValidEmailAddress(user.getEmail());
+        try {
+            log.info("Добавлен пользователь {}.", user);
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Пользователь с таким email {} уже существует.", user.getEmail());
+            throw new EmailAlreadyExistsException(String.format("Пользователь с таким email %s уже существует.",
+                    user.getEmail()));
+        }
     }
 
     @Override
     public User getUserById(long id) {
-        Optional<User> optionalUser = userRepository.getUserById(id);
-        if (optionalUser.isEmpty()) {
-            throw new ElementNotFoundException(String.format("Не найден пользователь с id%d.", id));
-        }
-        return optionalUser.get();
+        log.info(String.format("Запрошен пользователь с id%d.", id));
+        return userRepository.findById(id).orElseThrow(() -> new ElementNotFoundException(
+                String.format("пользователь с id%d.", id)));
     }
 
     @Override
@@ -50,15 +58,23 @@ public class UserServiceImpl implements UserService {
             user.setName(updatedUser.getName());
         }
         if (updatedUser.getEmail() != null) {
-            checkEmailAvailability(updatedUser.getEmail());
+            checkValidEmailAddress(updatedUser.getEmail());
             user.setEmail(updatedUser.getEmail());
         }
-        return userRepository.updateUser(user);
+        try {
+            log.info(String.format("Обновлён пользователь с id%d.", userId));
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Пользователь с таким email {} уже существует.", user.getEmail());
+            throw new EmailAlreadyExistsException(String.format("Пользователь с таким email %s уже существует.",
+                    user.getEmail()));
+        }
     }
 
     @Override
-    public long removeUserById(long id) {
-        return userRepository.removeUserById(id);
+    public void removeUserById(long id) {
+        log.info(String.format("Удалён пользователь с id%d.", id));
+        userRepository.deleteById(id);
     }
 
     private void checkValidEmailAddress(String email) {
@@ -66,18 +82,7 @@ public class UserServiceImpl implements UserService {
             InternetAddress emailAddr = new InternetAddress(email);
             emailAddr.validate();
         } catch (AddressException ex) {
-            throw new ValidationException(String.format("user.Email не в формате email."));
+            throw new ValidationException("user.Email не в формате email.");
         }
-    }
-
-    private boolean checkEmailAvailability(String email) {
-        checkValidEmailAddress(email);
-        for (User u : getAllUsers()) {
-            if (email.equals(u.getEmail())) {
-                throw new EmailAlreadyExistsException(String.format("пользователь с таким email %s уже существует.",
-                        email));
-            }
-        }
-        return true;
     }
 }

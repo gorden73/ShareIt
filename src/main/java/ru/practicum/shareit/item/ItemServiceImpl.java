@@ -12,6 +12,7 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -112,7 +113,7 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private void checkUserById(long userId) {
+    public void checkUserById(long userId) {
         if (!userRepository.existsById(userId)) {
             throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
         }
@@ -129,6 +130,7 @@ public class ItemServiceImpl implements ItemService {
         return ownerItems.stream()
                 .map(this::addCommentsIntoItem)
                 .map(this::addIntoItemLastAndNextBookings)
+                .sorted(Comparator.comparing(Item::getId))
                 .collect(Collectors.toList());
     }
 

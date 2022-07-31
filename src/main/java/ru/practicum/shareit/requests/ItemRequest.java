@@ -1,26 +1,37 @@
 package ru.practicum.shareit.requests;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemOwnerDto;
 import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "item_requests")
+@NoArgsConstructor
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @NotNull
+    @Column(name = "description", nullable = false, length = 1000)
     private String description;
-    @NotNull
-    @JoinColumn(name = "requester_id")
+    @JoinColumn(name = "requester_id", nullable = false)
     @ManyToOne
     private User requester;
     private LocalDateTime created;
+    @Transient
+    private List<ItemOwnerDto> items;
+
+    public ItemRequest(String description) {
+        this.description = description;
+        this.created = LocalDateTime.now();
+    }
 }

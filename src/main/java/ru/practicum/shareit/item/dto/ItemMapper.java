@@ -35,7 +35,7 @@ public class ItemMapper {
                 .map(ItemMapper::toCommentDto)
                 .collect(Collectors.toList()));
         if (item.getRequest() != null) {
-            dto.setRequest(item.getRequest().getId());
+            dto.setRequestId(item.getRequest().getId());
         }
         if (item.getLastBooking() == null && item.getNextBooking() != null) {
             dto.setNextBooking(BookingMapper.toBookingOwnerDto(item.getNextBooking()));

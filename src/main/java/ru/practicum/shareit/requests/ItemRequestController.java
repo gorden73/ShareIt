@@ -23,16 +23,17 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public Collection<ItemRequestDto> getAllItemRequestsByOwner(
-            @RequestHeader("X-Sharer-User-Id") @NotNull long userId) {
+    public Collection<ItemRequestDto> getAllItemRequestsByOwner(@RequestHeader("X-Sharer-User-Id")
+                                                                @NotNull long userId) {
         return ItemRequestMapper.toDtoCollection(service.getAllItemRequestsByOwner(userId));
     }
 
     @GetMapping("/all")
-    public Collection<ItemRequestDto> getAllItemRequestsByOtherUsers(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
+    public Collection<ItemRequestDto> getAllItemRequestsByOtherUsers(@RequestHeader("X-Sharer-User-Id")
+                                                                     @NotNull long userId,
                                                                      @RequestParam(defaultValue = "0") int from,
-                                                                     @RequestParam(defaultValue = "10") int page) {
-        return ItemRequestMapper.toDtoCollection(service.getAllItemRequestsByOtherUsers(userId, from, page));
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        return ItemRequestMapper.toDtoCollection(service.getAllItemRequestsByOtherUsers(userId, from, size));
     }
 
     @GetMapping("/{requestId}")

@@ -14,7 +14,8 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getIsAvailable()
+                item.getIsAvailable(),
+                item.getRequestId()
         );
         dto.setComments(item.getComments()
                 .stream()
@@ -28,7 +29,8 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getIsAvailable()
+                item.getIsAvailable(),
+                item.getRequestId()
         );
         dto.setComments(item.getComments()
                 .stream()
@@ -56,7 +58,8 @@ public class ItemMapper {
         return new Item(
                 itemDto.getName(),
                 itemDto.getDescription(),
-                itemDto.getAvailable()
+                itemDto.getAvailable(),
+                itemDto.getRequestId()
         );
     }
 

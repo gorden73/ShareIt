@@ -9,9 +9,11 @@ public interface ItemService {
 
     Item getItemById(long userId, long id);
 
-    Collection<Item> getOwnerItems(long ownerId);
+    Collection<Item> getOwnerItems(long ownerId, int from, int size);
 
     Collection<Item> searchAvailableItems(String text);
+
+    Collection<Item> searchAvailableItems(String text, int from, int size);
 
     Comment addCommentByItemId(long userId, Comment comment, long itemId);
 

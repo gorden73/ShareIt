@@ -33,15 +33,18 @@ public class Item {
     @JoinColumn(name = "request_id")
     private ItemRequest request;
     @Transient
+    private long requestId;
+    @Transient
     private Booking lastBooking;
     @Transient
     private Booking nextBooking;
     @Transient
     private List<Comment> comments = new ArrayList<>();
 
-    public Item(String name, String description, Boolean available) {
+    public Item(String name, String description, Boolean available, long requestId) {
         this.name = name;
         this.description = description;
         this.isAvailable = available;
+        this.requestId = requestId;
     }
 }

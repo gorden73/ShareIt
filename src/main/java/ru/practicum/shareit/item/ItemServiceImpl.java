@@ -2,6 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -120,10 +122,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<Item> getOwnerItems(long ownerId) {
+    public Collection<Item> getOwnerItems(long ownerId, int from, int size) {
+        Pageable page = PageRequest.of(from, size);
         checkUserById(ownerId);
         log.info("Запрошен список вещей пользователя {}.", ownerId);
-        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId);
+        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId, page);
         if (ownerItems.isEmpty()) {
             return List.of();
         }
@@ -142,6 +145,17 @@ public class ItemServiceImpl implements ItemService {
         }
         log.info("Поиск вещей по запросу - {}.", text);
         return itemRepository.searchAvailableItems(text);
+    }
+
+    @Override
+    public Collection<Item> searchAvailableItems(String text, int from, int size) {
+        Pageable page = checkPageBorders(from, size);
+        if (text.isBlank()) {
+            log.info("Пустой поисковый запрос.");
+            return List.of();
+        }
+        log.info("Поиск вещей по запросу - {}.", text);
+        return itemRepository.searchAvailableItems(text, page);
     }
 
     @Override
@@ -166,5 +180,15 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(LocalDateTime.now());
         log.info("Добавлен новый комментарий к вещи id{}.", itemId);
         return commentRepository.save(comment);
+    }
+
+    private Pageable checkPageBorders(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException(String.format("неверное значение from %d.", from));
+        }
+        if (size < 1) {
+            throw new ValidationException(String.format("неверное значение size %d.", size));
+        }
+        return PageRequest.of(from, size);
     }
 }

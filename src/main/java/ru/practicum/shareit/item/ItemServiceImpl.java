@@ -9,6 +9,7 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
+import ru.practicum.shareit.requests.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -27,13 +28,17 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
+    private final ItemRequestRepository requestRepository;
+
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
-                           BookingRepository bookingRepository, CommentRepository commentRepository) {
+                           BookingRepository bookingRepository, CommentRepository commentRepository,
+                           ItemRequestRepository requestRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.requestRepository = requestRepository;
     }
 
     @Override
@@ -42,6 +47,9 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("пользователь с таким id%d.", userId)));
         item.setOwner(user);
+        if (item.getRequestId() > 0) {
+            requestRepository.findById(item.getRequestId()).ifPresent(item::setRequest);
+        }
         log.info("Добавлена новая вещь {} пользователя id{}.", item, item.getOwner().getId());
         return itemRepository.save(item);
     }
@@ -138,16 +146,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<Item> searchAvailableItems(String text) {
-        if (text.isBlank()) {
-            log.info("Пустой поисковый запрос.");
-            return List.of();
-        }
-        log.info("Поиск вещей по запросу - {}.", text);
-        return itemRepository.searchAvailableItems(text);
-    }
-
-    @Override
     public Collection<Item> searchAvailableItems(String text, int from, int size) {
         Pageable page = checkPageBorders(from, size);
         if (text.isBlank()) {
@@ -190,5 +188,10 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException(String.format("неверное значение size %d.", size));
         }
         return PageRequest.of(from, size);
+    }
+
+    @Override
+    public List<Item> searchAvailableItemsByRequestId(long requestId) {
+        return itemRepository.searchAvailableItemsByRequest_Id(requestId);
     }
 }

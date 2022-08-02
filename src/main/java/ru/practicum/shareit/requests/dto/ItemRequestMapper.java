@@ -6,13 +6,13 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class ItemRequestMapper {
-    public static ItemRequestDto toDto(ItemRequest item) {
+    public static ItemRequestDto toDto(ItemRequest request) {
         return new ItemRequestDto(
-                item.getId(),
-                item.getDescription(),
-                item.getRequester().getId(),
-                item.getCreated(),
-                item.getItems());
+                request.getId(),
+                request.getDescription(),
+                request.getRequester().getId(),
+                request.getCreated(),
+                request.getItems());
     }
 
     public static Collection<ItemRequestDto> toDtoCollection(Collection<ItemRequest> requestCollection) {

@@ -58,7 +58,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
         Pageable page = PageRequest.of(from, size);
         log.info("Пользователь id{} запросил список запросов других пользователей.", requesterId);
-        return requestRepository.findAllByRequesterIdIsNotOrderByCreatedDesc(requesterId, page);
+        return requestRepository.findAllByRequesterIdIsNotOrderByCreatedDesc(requesterId, page)
+                .stream()
+                .map(this::searchItemsByRequest)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     private ItemRequest searchItemsByRequest(ItemRequest request) {
-        List<ItemOwnerDto> items = itemService.searchAvailableItems(request.getDescription().trim())
+        List<ItemOwnerDto> items = itemService.searchAvailableItemsByRequestId(request.getId())
                 .stream()
                 .map(ItemMapper::toItemOwnerDto)
                 .collect(Collectors.toList());

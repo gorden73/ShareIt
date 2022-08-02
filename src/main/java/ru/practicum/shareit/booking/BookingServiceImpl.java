@@ -15,7 +15,6 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -126,7 +125,7 @@ public class BookingServiceImpl implements BookingService {
         Pageable page = checkPageBorders(from, size);
         if (!userRepository.existsById(bookerId)) {
             log.error("Пользователь id{} не найден.", bookerId);
-            return Collections.emptyList();
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", bookerId));
         }
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
@@ -159,7 +158,7 @@ public class BookingServiceImpl implements BookingService {
         Pageable page = checkPageBorders(from, size);
         if (!userRepository.existsById(ownerId)) {
             log.error("Пользователь id{} не найден.", ownerId);
-            return Collections.emptyList();
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", ownerId));
         }
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {

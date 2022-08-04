@@ -39,14 +39,8 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        user1 = new User(
-                1L,
-                "John1",
-                "john.doe1@mail.com");
-        user2 = new User(
-                2L,
-                "John2",
-                "john.doe2@mail.com");
+        user1 = new User(1L,"John1","john.doe1@mail.com");
+        user2 = new User(2L,"John2","john.doe2@mail.com");
     }
 
     @Test
@@ -69,7 +63,7 @@ class UserControllerTest {
 
     @Test
     void addUser() throws Exception {
-        when(service.addUser(any()))
+        when(service.addUser(any(User.class)))
                 .thenReturn(user1);
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user1))
@@ -99,7 +93,7 @@ class UserControllerTest {
 
     @Test
     void updateUser() throws Exception {
-        when(service.updateUser(anyLong(), any()))
+        when(service.updateUser(anyLong(), any(User.class)))
                 .thenReturn(user1);
         mvc.perform(patch("/users/1")
                         .content(mapper.writeValueAsString(user1))

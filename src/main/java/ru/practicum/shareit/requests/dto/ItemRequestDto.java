@@ -14,14 +14,12 @@ public class ItemRequestDto {
     private long id;
     @NotNull
     private String description;
-    private long requester;
     private LocalDateTime created;
     private List<ItemOwnerDto> items;
 
-    public ItemRequestDto(long id, String description, long requester, LocalDateTime created, List<ItemOwnerDto> items) {
+    public ItemRequestDto(long id, String description, LocalDateTime created, List<ItemOwnerDto> items) {
         this.id = id;
         this.description = description;
-        this.requester = requester;
         this.created = created;
         this.items = items;
     }

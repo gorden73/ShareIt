@@ -18,7 +18,7 @@ public class ItemRequestController {
     @PostMapping
     public ItemRequestDto addRequest(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
                                      @Valid @RequestBody ItemRequestDto dto) {
-        ItemRequest request = new ItemRequest(dto.getDescription());
+        ItemRequest request = ItemRequestMapper.toRequest(dto);
         return ItemRequestMapper.toDto(service.addRequest(userId, request));
     }
 

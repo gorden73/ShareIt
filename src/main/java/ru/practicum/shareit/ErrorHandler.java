@@ -40,7 +40,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleEmailAlreadyExistsException(final EmailAlreadyExistsException e) {
         log.error("Ошибка, {}", e.getMessage());
-        return Map.of("error", e.getMessage());
+        return Map.of("error", String.format("ошибка - %s", e.getMessage()));
     }
 
     @ExceptionHandler

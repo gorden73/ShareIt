@@ -10,9 +10,12 @@ public class ItemRequestMapper {
         return new ItemRequestDto(
                 request.getId(),
                 request.getDescription(),
-                request.getRequester().getId(),
                 request.getCreated(),
                 request.getItems());
+    }
+
+    public static ItemRequest toRequest(ItemRequestDto dto) {
+        return new ItemRequest(dto.getDescription());
     }
 
     public static Collection<ItemRequestDto> toDtoCollection(Collection<ItemRequest> requestCollection) {

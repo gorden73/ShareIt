@@ -9,6 +9,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.exceptions.ElementNotFoundException;
+import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.requests.ItemRequest;
 import ru.practicum.shareit.user.User;
@@ -94,7 +96,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void addItem() throws Exception {
+    void addItemWhen200IsReturned() throws Exception {
         when(service.addItem(anyLong(), any(Item.class)))
                 .thenReturn(item1);
         mvc.perform(post("/items")
@@ -112,7 +114,33 @@ class ItemControllerTest {
     }
 
     @Test
-    void updateItem() throws Exception {
+    void addItemWhen400IsReturned() throws Exception {
+        when(service.addItem(anyLong(), any(Item.class)))
+                .thenThrow(ValidationException.class);
+        mvc.perform(post("/items")
+                        .content(mapper.writeValueAsString(item1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(400));
+    }
+
+    @Test
+    void addItemWhen404IsReturned() throws Exception {
+        when(service.addItem(anyLong(), any(Item.class)))
+                .thenThrow(ElementNotFoundException.class);
+        mvc.perform(post("/items")
+                        .content(mapper.writeValueAsString(item1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    void updateItemWhen200IsReturned() throws Exception {
         when(service.updateItem(anyLong(), anyLong(), any(Item.class)))
                 .thenReturn(item1);
         mvc.perform(patch("/items/1")
@@ -130,7 +158,20 @@ class ItemControllerTest {
     }
 
     @Test
-    void getIsOkWhenGetItemByIdByOtherUserWithLastBookingAndNextBookingAndComments() throws Exception {
+    void updateItemWhen404IsReturned() throws Exception {
+        when(service.updateItem(anyLong(), anyLong(), any(Item.class)))
+                .thenThrow(ElementNotFoundException.class);
+        mvc.perform(patch("/items/1")
+                        .content(mapper.writeValueAsString(item1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    void getItemByIdByOtherUserWithLastBookingAndNextBookingAndCommentsWhen200IsReturned() throws Exception {
         when(service.getItemById(anyLong(), anyLong()))
                 .thenReturn(item1);
         item1.setLastBooking(lastBooking);
@@ -157,7 +198,22 @@ class ItemControllerTest {
     }
 
     @Test
-    void getIsOkWhenGetItemByIdByOwnerWithLastBookingAndNextBookingAndComments() throws Exception {
+    void getItemByIdWhen404IsReturned() throws Exception {
+        when(service.getItemById(anyLong(), anyLong()))
+                .thenThrow(ElementNotFoundException.class);
+        item1.setLastBooking(lastBooking);
+        item1.setNextBooking(nextBooking);
+        mvc.perform(get("/items/1")
+                        .content(mapper.writeValueAsString(item1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    void getItemByIdByOwnerWithLastBookingAndNextBookingAndCommentsWhen200IsReturned() throws Exception {
         when(service.getItemById(anyLong(), anyLong()))
                 .thenReturn(item1);
         item1.setLastBooking(lastBooking);
@@ -188,7 +244,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void getIsOkWhenGetItemByIdByOwnerWithLastBookingAndCommentsWithoutNextBooking() throws Exception {
+    void getItemByIdByOwnerWithLastBookingAndCommentsWithoutNextBookingWhen200IsReturned() throws Exception {
         when(service.getItemById(anyLong(), anyLong()))
                 .thenReturn(item1);
         item1.setLastBooking(lastBooking);
@@ -216,7 +272,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void getIsOkWhenGetItemByIdByOwnerWithNextBookingAndCommentsWithoutLastBooking() throws Exception {
+    void getGetItemByIdByOwnerWithNextBookingAndCommentsWithoutLastBookingWhen200IsReturned() throws Exception {
         when(service.getItemById(anyLong(), anyLong()))
                 .thenReturn(item1);
         item1.setNextBooking(nextBooking);
@@ -244,7 +300,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void getOwnerItems() throws Exception {
+    void getOwnerItemsWhen200IsReturned() throws Exception {
         List<Item> items = new ArrayList<>();
         items.add(item1);
         when(service.getOwnerItems(anyLong(), anyInt(), anyInt()))
@@ -267,7 +323,24 @@ class ItemControllerTest {
     }
 
     @Test
-    void searchAvailableItems() throws Exception {
+    void getOwnerItemsWhen404IsReturned() throws Exception {
+        List<Item> items = new ArrayList<>();
+        items.add(item1);
+        when(service.getOwnerItems(anyLong(), anyInt(), anyInt()))
+                .thenThrow(ElementNotFoundException.class);
+        mvc.perform(get("/items")
+                        .content(mapper.writeValueAsString(item1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    void searchAvailableItemsWhen200IsReturned() throws Exception {
         List<Item> items = new ArrayList<>();
         items.add(item1);
         when(service.searchAvailableItems(anyString(), anyInt(), anyInt()))
@@ -291,7 +364,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void addCommentByItemId() throws Exception {
+    void addCommentByItemIdWhen200IsReturned() throws Exception {
         when(service.addCommentByItemId(anyLong(), any(Comment.class), anyLong()))
                 .thenReturn(comment);
         mvc.perform(post("/items/1/comment")
@@ -305,5 +378,31 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.text", is(comment.getText())))
                 .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())))
                 .andExpect(jsonPath("$.created", is(notNullValue())));
+    }
+
+    @Test
+    void addCommentByItemIdWhen400IsReturned() throws Exception {
+        when(service.addCommentByItemId(anyLong(), any(Comment.class), anyLong()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(post("/items/1/comment")
+                        .content(mapper.writeValueAsString(comment))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(400));
+    }
+
+    @Test
+    void addCommentByItemIdWhen404IsReturned() throws Exception {
+        when(service.addCommentByItemId(anyLong(), any(Comment.class), anyLong()))
+                .thenThrow(ElementNotFoundException.class);
+        mvc.perform(post("/items/1/comment")
+                        .content(mapper.writeValueAsString(comment))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .header("X-Sharer-User-Id", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
     }
 }

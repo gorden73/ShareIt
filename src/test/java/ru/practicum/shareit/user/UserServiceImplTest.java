@@ -10,7 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserServiceImplTest {
 
-    private final UserServiceImpl userService;
+    @Autowired
+    private UserServiceImpl userService;
 
     @Test
     void getAllUsers() {

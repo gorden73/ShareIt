@@ -125,7 +125,7 @@ public class ItemServiceImpl implements ItemService {
 
     public void checkUserById(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
+            throw new ElementNotFoundException(String.format("Не найден пользователь с id%d.", userId));
         }
     }
 

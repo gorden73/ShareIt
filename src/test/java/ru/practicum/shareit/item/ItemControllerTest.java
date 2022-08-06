@@ -53,8 +53,8 @@ class ItemControllerTest {
 
     @BeforeEach
     void setUp() {
-        user1 = new User(1L,"John1","john.doe1@mail.com");
-        user2 = new User(2L,"John2","john.doe2@mail.com");
+        user1 = new User(1L, "John1", "john.doe1@mail.com");
+        user2 = new User(2L, "John2", "john.doe2@mail.com");
 
         item1 = new Item("Paper1", "Newspaper1", true, 0);
         item1.setId(1L);

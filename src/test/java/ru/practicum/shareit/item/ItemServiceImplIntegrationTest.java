@@ -16,6 +16,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,7 +49,7 @@ class ItemServiceImplIntegrationTest {
         user1 = new User(1L, "John1", "doe1@mail.ru");
         user2 = new User(2L, "John2", "john.doe2@mail.com");
 
-        item1 = new Item("Thing", "Cool thing", true, 0);
+        item1 = new Item("Thing", "Cool thing", true, 1);
         item1.setId(1L);
         item1.setOwner(user1);
 
@@ -78,15 +79,10 @@ class ItemServiceImplIntegrationTest {
         request.setRequester(user2);
         request.setCreated(LocalDateTime.now());
 
-        item1.setComments(List.of(comment));
-        item1.setRequest(request);
-        item1.setLastBooking(lastBooking);
-        item1.setNextBooking(nextBooking);
-
         userRepository.save(user1);
-        userRepository.save(user1);
+        userRepository.save(user2);
         requestRepository.save(request);
-        itemRepository.save(item1);
+        itemService.addItem(1L, item1);
         bookingRepository.save(lastBooking);
         bookingRepository.save(nextBooking);
         commentRepository.save(comment);
@@ -101,10 +97,24 @@ class ItemServiceImplIntegrationTest {
         assertThat(returnedItem.getName(), equalTo(item1.getName()));
         assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));
         assertThat(returnedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
-        assertThat(returnedItem.getLastBooking(), equalTo(item1.getLastBooking()));
-        assertThat(returnedItem.getNextBooking(), equalTo(item1.getNextBooking()));
+        assertThat(returnedItem.getRequest().getId(), equalTo(item1.getRequestId()));
+        assertThat(returnedItem.getLastBooking().getId(), equalTo(lastBooking.getId()));
+        assertThat(returnedItem.getLastBooking().getItem().getId(), equalTo(lastBooking.getItem().getId()));
+        assertThat(returnedItem.getLastBooking().getBooker().getId(), equalTo(lastBooking.getBooker().getId()));
+        assertThat(returnedItem.getLastBooking().getStatus(), equalTo(lastBooking.getStatus()));
+        assertTrue(returnedItem.getLastBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(lastBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+        assertTrue(returnedItem.getLastBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(lastBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
+        assertThat(returnedItem.getNextBooking().getId(), equalTo(nextBooking.getId()));
+        assertThat(returnedItem.getNextBooking().getItem().getId(), equalTo(nextBooking.getItem().getId()));
+        assertThat(returnedItem.getNextBooking().getBooker().getId(), equalTo(nextBooking.getBooker().getId()));
+        assertThat(returnedItem.getNextBooking().getStatus(), equalTo(nextBooking.getStatus()));
+        assertTrue(returnedItem.getNextBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(nextBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+        assertTrue(returnedItem.getNextBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(nextBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
         assertThat(returnedItem.getComments().size(), equalTo(1));
         assertThat(returnedItem.getComments().get(0).getText(), equalTo(comment.getText()));
-        assertThat(returnedItem.getRequestId(), equalTo(item1.getRequest().getId()));
     }
 }

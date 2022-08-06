@@ -94,8 +94,10 @@ class UserServiceImplUnitTest {
     @Test
     void shouldThrowElementNotFoundExceptionWhenGetNotExistsUserById() {
         when(userRepository.findById(anyLong()))
-                .thenThrow(ElementNotFoundException.class);
-        assertThrows(ElementNotFoundException.class, () -> userService.getUserById(1L));
+                .thenReturn(Optional.empty());
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> userService.getUserById(1L));
+        assertTrue(exception.getMessage().contains("пользователь с id"));
     }
 
     @Test

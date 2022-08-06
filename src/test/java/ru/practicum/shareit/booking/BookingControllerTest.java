@@ -238,8 +238,6 @@ class BookingControllerTest {
 
     @Test
     void getAllBookingsByUserIdWhen400IsReturned() throws Exception {
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(booking1);
         when(service.getAllBookingsByUserId(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenThrow(ValidationException.class);
         mvc.perform(get("/bookings")
@@ -256,8 +254,6 @@ class BookingControllerTest {
 
     @Test
     void getAllBookingsByUserIdWhen404IsReturned() throws Exception {
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(booking1);
         when(service.getAllBookingsByUserId(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenThrow(ElementNotFoundException.class);
         mvc.perform(get("/bookings")
@@ -303,8 +299,6 @@ class BookingControllerTest {
 
     @Test
     void getAllBookingsByOwnerIdWhen400IsReturned() throws Exception {
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(booking1);
         when(service.getAllBookingsByOwnerId(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenThrow(ValidationException.class);
         mvc.perform(get("/bookings/owner")
@@ -321,8 +315,6 @@ class BookingControllerTest {
 
     @Test
     void getAllBookingsByOwnerIdWhen404IsReturned() throws Exception {
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(booking1);
         when(service.getAllBookingsByOwnerId(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenThrow(ElementNotFoundException.class);
         mvc.perform(get("/bookings/owner")
@@ -335,5 +327,21 @@ class BookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(404));
+    }
+
+    @Test
+    void getAllBookingsByOwnerIdWhen500IsReturned() throws Exception {
+        when(service.getAllBookingsByOwnerId(anyLong(), anyString(), anyInt(), anyInt()))
+                .thenThrow(IllegalArgumentException.class);
+        mvc.perform(get("/bookings/owner")
+                        .content(mapper.writeValueAsString(booking1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .param("state", "LALA")
+                        .param("from", "0")
+                        .param("size", "1")
+                        .header("X-Sharer-User-Id", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(500));
     }
 }

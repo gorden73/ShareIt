@@ -113,13 +113,13 @@ public class ItemServiceImpl implements ItemService {
 
     private void checkInputDataByAddItem(Item item) {
         if (item.getName() == null || item.getName().isBlank()) {
-            throw new ValidationException("item.Name = null или item.Name состоит из пробелов");
+            throw new ValidationException("item.Name = null или item.Name состоит из пробелов.");
         }
         if (item.getDescription() == null || item.getDescription().isBlank()) {
-            throw new ValidationException("item.Description = null");
+            throw new ValidationException("item.Description = null или состоит из пробелов.");
         }
         if (item.getIsAvailable() == null) {
-            throw new ValidationException("item.isAvailable = null");
+            throw new ValidationException("item.isAvailable = null.");
         }
     }
 

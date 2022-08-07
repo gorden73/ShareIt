@@ -182,10 +182,10 @@ public class ItemServiceImpl implements ItemService {
 
     private Pageable checkPageBorders(int from, int size) {
         if (from < 0) {
-            throw new ValidationException(String.format("неверное значение from %d.", from));
+            throw new ValidationException(String.format("недопустимое значение from %d.", from));
         }
         if (size < 1) {
-            throw new ValidationException(String.format("неверное значение size %d.", size));
+            throw new ValidationException(String.format("недопустимое значение size %d.", size));
         }
         return PageRequest.of(from, size);
     }

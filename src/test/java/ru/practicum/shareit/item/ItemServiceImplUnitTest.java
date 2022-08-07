@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
@@ -16,14 +17,18 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -189,26 +194,231 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void getItemById() {
+    void shouldGetItemByIdWithLastBookingAndNextBookingWhenUserIsOwner() {
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(item1));
+        when(commentRepository.findAllByItem_Id(anyLong()))
+                .thenReturn(List.of(comment));
+        when(bookingRepository.findBookingsByItem_Id(anyLong()))
+                .thenReturn(List.of(lastBooking, nextBooking));
+        item1.setComments(List.of(comment));
+        item1.setOwner(user1);
+        Item returnedItem = itemService.getItemById(1L, 1L);
+        assertThat(returnedItem.getId(), equalTo(item1.getId()));
+        assertThat(returnedItem.getName(), equalTo(item1.getName()));
+        assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));
+        assertThat(returnedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
+        assertThat(returnedItem.getRequest(), nullValue());
+        assertThat(returnedItem.getLastBooking().getId(), equalTo(lastBooking.getId()));
+        assertThat(returnedItem.getLastBooking().getItem().getId(), equalTo(lastBooking.getItem().getId()));
+        assertThat(returnedItem.getLastBooking().getBooker().getId(), equalTo(lastBooking.getBooker().getId()));
+        assertThat(returnedItem.getLastBooking().getStatus(), equalTo(lastBooking.getStatus()));
+        assertTrue(returnedItem.getLastBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(lastBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+        assertTrue(returnedItem.getLastBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(lastBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
+        assertThat(returnedItem.getNextBooking().getId(), equalTo(nextBooking.getId()));
+        assertThat(returnedItem.getNextBooking().getItem().getId(), equalTo(nextBooking.getItem().getId()));
+        assertThat(returnedItem.getNextBooking().getBooker().getId(), equalTo(nextBooking.getBooker().getId()));
+        assertThat(returnedItem.getNextBooking().getStatus(), equalTo(nextBooking.getStatus()));
+        assertTrue(returnedItem.getNextBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(nextBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+        assertTrue(returnedItem.getNextBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(nextBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
+        assertThat(returnedItem.getComments().size(), equalTo(1));
+        assertThat(returnedItem.getComments().get(0).getText(), equalTo(comment.getText()));
     }
 
     @Test
-    void checkUserById() {
+    void shouldGetItemByIdWithoutLastBookingAndNextBookingWhenUserIsNotOwner() {
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(item1));
+        when(commentRepository.findAllByItem_Id(anyLong()))
+                .thenReturn(List.of(comment));
+        when(bookingRepository.findBookingsByItem_Id(anyLong()))
+                .thenReturn(List.of(lastBooking, nextBooking));
+        item1.setComments(List.of(comment));
+        item1.setOwner(user1);
+        Item returnedItem = itemService.getItemById(3L, 1L);
+        assertThat(returnedItem.getId(), equalTo(item1.getId()));
+        assertThat(returnedItem.getName(), equalTo(item1.getName()));
+        assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));
+        assertThat(returnedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
+        assertThat(returnedItem.getRequest(), nullValue());
+        assertThat(returnedItem.getLastBooking(), nullValue());
+        assertThat(returnedItem.getNextBooking(), nullValue());
+        assertThat(returnedItem.getComments().size(), equalTo(1));
+        assertThat(returnedItem.getComments().get(0).getText(), equalTo(comment.getText()));
     }
 
     @Test
-    void getOwnerItems() {
+    void shouldThrowElementNotFoundExceptionWhenGetItemByIdWhenItemIsNotFound() {
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> itemService.getItemById(1L, 1L));
+        assertTrue(exception.getMessage().contains("вещь с id"));
     }
 
     @Test
-    void searchAvailableItems() {
+    void shouldCheckUserByIdAndReturnVoid() {
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        itemService.checkUserById(1L);
+        verify(userRepository, times(1)).existsById(1L);
+        verifyNoMoreInteractions(itemRepository, bookingRepository, requestRepository, commentRepository);
     }
 
     @Test
-    void addCommentByItemId() {
+    void shouldThrowElementNotFoundExceptionWhenCheckUserByIdWhenUserNotFound() {
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(false);
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> itemService.checkUserById(1L));
+        assertTrue(exception.getMessage().contains("Не найден пользователь с id"));
     }
 
     @Test
-    void searchAvailableItemsByRequestId() {
+    void shouldReturnEmptyCollectionWhenGetOwnerItemsWhenUserHasNotItems() {
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(itemRepository.findItemsByOwnerId(anyLong(), any(Pageable.class)))
+                .thenReturn(List.of());
+        Collection<Item> ownerItems = itemService.getOwnerItems(anyLong(), 0, 1);
+        assertTrue(ownerItems.isEmpty());
+    }
+
+    @Test
+    void shouldReturnCollectionOfItemsWhenGetOwnerItemsWhenUserHasNotItems() {
+        item1.setOwner(user1);
+        item1.setLastBooking(lastBooking);
+        item1.setNextBooking(nextBooking);
+        item2.setId(2L);
+        item2.setOwner(user1);
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(itemRepository.findItemsByOwnerId(anyLong(), any(Pageable.class)))
+                .thenReturn(List.of(item1, item2));
+        Collection<Item> ownerItems = itemService.getOwnerItems(anyLong(), 0, 1);
+        assertFalse(ownerItems.isEmpty());
+        assertTrue(ownerItems.contains(item1));
+        assertTrue(ownerItems.contains(item2));
+        assertThat(ownerItems.size(), equalTo(2));
+    }
+
+    @Test
+    void shouldThrowElementNotFoundExceptionWhenGetOwnerItemsWhenUserNotFound() {
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(false);
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> itemService.getOwnerItems(1L, 0, 1));
+        assertTrue(exception.getMessage().contains("Не найден пользователь с id"));
+    }
+
+    @Test
+    void shouldReturnAvailableItemsWhenSearchAvailableItems() {
+        when(itemRepository.searchAvailableItems(anyString(), any(Pageable.class)))
+                .thenReturn(List.of(item1));
+        Collection<Item> returnedItems = itemService.searchAvailableItems("Newspaper", 0, 1);
+        assertFalse(returnedItems.isEmpty());
+        assertTrue(returnedItems.contains(item1));
+        assertThat(returnedItems.size(), equalTo(1));
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenSearchAvailableItemsWhenFromLessThanZero() {
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> itemService.searchAvailableItems("Newspaper", -1, 1));
+        assertTrue(exception.getMessage().contains("недопустимое значение from"));
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenSearchAvailableItemsWhenSizeLessThanOne() {
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> itemService.searchAvailableItems("Newspaper", 0, 0));
+        assertTrue(exception.getMessage().contains("недопустимое значение size"));
+    }
+
+    @Test
+    void shouldReturnEmptyCollectionWhenSearchAvailableItemsWhenRequestTextIsBlank() {
+        when(itemRepository.searchAvailableItems(anyString(), any(Pageable.class)))
+                .thenReturn(List.of());
+        Collection<Item> returnedItems = itemService.searchAvailableItems("", 0, 1);
+        assertTrue(returnedItems.isEmpty());
+    }
+
+    @Test
+    void shouldAddCommentByItemId() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(user1));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(item1));
+        when(bookingRepository.findByItem_IdAndBooker_IdAndEndBefore(anyLong(), anyLong(), any(LocalDateTime.class)))
+                .thenReturn(List.of(lastBooking));
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(comment);
+        Comment savedComment = itemService.addCommentByItemId(2L, comment, 1L);
+        assertThat(savedComment.getId(), equalTo(comment.getId()));
+        assertThat(savedComment.getText(), equalTo(comment.getText()));
+        assertThat(savedComment.getAuthor().getId(), equalTo(comment.getAuthor().getId()));
+        assertThat(savedComment.getAuthor().getName(), equalTo(comment.getAuthor().getName()));
+        assertThat(savedComment.getAuthor().getEmail(), equalTo(comment.getAuthor().getEmail()));
+        assertThat(savedComment.getItem().getId(), equalTo(comment.getItem().getId()));
+        assertThat(savedComment.getItem().getName(), equalTo(comment.getItem().getName()));
+        assertThat(savedComment.getItem().getDescription(), equalTo(comment.getItem().getDescription()));
+        assertThat(savedComment.getItem().getIsAvailable(), equalTo(comment.getItem().getIsAvailable()));
+        assertThat(savedComment.getItem().getRequest(), nullValue());
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenAddCommentByItemIdWhenTextIsBlank() {
+        comment.setText(" ");
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> itemService.addCommentByItemId(2L, comment, 1L));
+        assertTrue(exception.getMessage().contains("отзыв пустой или состоит из пробелов."));
+    }
+
+    @Test
+    void shouldThrowElementNotFoundExceptionWhenAddCommentByItemIdWhenUserIsNotFound() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> itemService.addCommentByItemId(3L, comment, 1L));
+        assertTrue(exception.getMessage().contains("пользователь с id3 не найден."));
+    }
+
+    @Test
+    void shouldThrowElementNotFoundExceptionWhenAddCommentByItemIdWhenItemIsNotFound() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(user1));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
+                () -> itemService.addCommentByItemId(2L, comment, 3L));
+        assertTrue(exception.getMessage().contains("вещь с id"));
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenAddCommentByItemIdWhenBookingIsNotFound() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(user1));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(item1));
+        when(bookingRepository.findByItem_IdAndBooker_IdAndEndBefore(anyLong(), anyLong(), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> itemService.addCommentByItemId(3L, comment, 1L));
+        assertTrue(exception.getMessage().contains("пользователь id3 не может оставить отзыв на вещь "));
+    }
+
+    @Test
+    void shouldReturnCollectionOfItemsWhenSearchAvailableItemsByRequestId() {
+        item1.setRequest(request);
+        when(itemRepository.searchAvailableItemsByRequest_Id(anyLong()))
+                .thenReturn(List.of(item1));
+        Collection<Item> availableItems = itemService.searchAvailableItemsByRequestId(1L);
+        assertFalse(availableItems.isEmpty());
+        assertThat(availableItems.size(), equalTo(1));
+        assertTrue(availableItems.contains(item1));
     }
 }

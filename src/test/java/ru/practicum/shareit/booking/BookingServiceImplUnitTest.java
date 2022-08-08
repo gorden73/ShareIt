@@ -95,11 +95,13 @@ class BookingServiceImplUnitTest {
 
     @Test
     void shouldThrowElementNotFoundExceptionWhenAddBookingWhenItemNotFound() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(user1));
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
         ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
                 () -> bookingService.addBooking(2L, booking1));
-        assertTrue(exception.getMessage().contains("пользователь с таким id"));
+        assertTrue(exception.getMessage().contains("вещь с id"));
     }
 
     @Test
@@ -185,6 +187,25 @@ class BookingServiceImplUnitTest {
         assertThat(returnedBooking.getItem().getId(), equalTo(booking1.getItem().getId()));
         assertThat(returnedBooking.getBooker().getId(), equalTo(booking1.getBooker().getId()));
         assertThat(returnedBooking.getStatus(), equalTo(Status.APPROVED));
+    }
+
+    @Test
+    void shouldSetRejectedByOwner() {
+        booking1.setStatus(Status.WAITING);
+        item1.setOwner(user1);
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.ofNullable(booking1));
+        when(bookingRepository.save(any(Booking.class)))
+                .thenReturn(booking1);
+        Booking returnedBooking = bookingService.setApprovedByOwner(1L, 1L, false);
+        assertThat(returnedBooking.getId(), equalTo(booking1.getId()));
+        assertThat(returnedBooking.getStart(), notNullValue());
+        assertThat(returnedBooking.getEnd(), notNullValue());
+        assertThat(returnedBooking.getItem().getId(), equalTo(booking1.getItem().getId()));
+        assertThat(returnedBooking.getBooker().getId(), equalTo(booking1.getBooker().getId()));
+        assertThat(returnedBooking.getStatus(), equalTo(Status.REJECTED));
     }
 
     @Test

@@ -165,7 +165,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
             return bookingRepository.findBookingsByOwnerId(ownerId, page);
         } else {
-            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED").contains(status1)) {
+            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED", "APPROVED").contains(status1)) {
                 log.error("Введено неверное значение статуса {}.", status1);
                 throw new IllegalArgumentException(String.format("Unknown state: %s", status1));
             }

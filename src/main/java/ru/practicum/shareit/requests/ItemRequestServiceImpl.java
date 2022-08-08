@@ -50,6 +50,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequest> getAllItemRequestsByOtherUsers(long requesterId, int from, int size) {
+        itemService.checkUserById(requesterId);
         if (from < 0) {
             throw new ValidationException(String.format("неверное значение from %d.", from));
         }

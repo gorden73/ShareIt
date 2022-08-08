@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -26,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestPropertySource(locations = "classpath:application-test.properties")
 class ItemServiceImplIntegrationTest {
     private final ItemService itemService;
-    private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
@@ -86,32 +86,33 @@ class ItemServiceImplIntegrationTest {
     }
 
     @Test
-    void getOwnerItems() {
+    void shouldGetOwnerItems() {
         Collection<Item> items = itemService.getOwnerItems(1L, 0, 1);
-        Item returnedItem = items.stream().findFirst().get();
-        assertThat(items.size(), equalTo(1));
-        assertThat(returnedItem.getId(), equalTo(item1.getId()));
-        assertThat(returnedItem.getName(), equalTo(item1.getName()));
-        assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));
-        assertThat(returnedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
-        assertThat(returnedItem.getRequest().getId(), equalTo(item1.getRequestId()));
-        assertThat(returnedItem.getLastBooking().getId(), equalTo(lastBooking.getId()));
-        assertThat(returnedItem.getLastBooking().getItem().getId(), equalTo(lastBooking.getItem().getId()));
-        assertThat(returnedItem.getLastBooking().getBooker().getId(), equalTo(lastBooking.getBooker().getId()));
-        assertThat(returnedItem.getLastBooking().getStatus(), equalTo(lastBooking.getStatus()));
-        assertTrue(returnedItem.getLastBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
-                .isEqual(lastBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
-        assertTrue(returnedItem.getLastBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
-                .isEqual(lastBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
-        assertThat(returnedItem.getNextBooking().getId(), equalTo(nextBooking.getId()));
-        assertThat(returnedItem.getNextBooking().getItem().getId(), equalTo(nextBooking.getItem().getId()));
-        assertThat(returnedItem.getNextBooking().getBooker().getId(), equalTo(nextBooking.getBooker().getId()));
-        assertThat(returnedItem.getNextBooking().getStatus(), equalTo(nextBooking.getStatus()));
-        assertTrue(returnedItem.getNextBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
-                .isEqual(nextBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
-        assertTrue(returnedItem.getNextBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
-                .isEqual(nextBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
-        assertThat(returnedItem.getComments().size(), equalTo(1));
-        assertThat(returnedItem.getComments().get(0).getText(), equalTo(comment.getText()));
+        assertThat(items, hasSize(1));
+        for(Item returnedItem : items) {
+            assertThat(returnedItem.getId(), equalTo(item1.getId()));
+            assertThat(returnedItem.getName(), equalTo(item1.getName()));
+            assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));
+            assertThat(returnedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
+            assertThat(returnedItem.getRequest().getId(), equalTo(item1.getRequestId()));
+            assertThat(returnedItem.getLastBooking().getId(), equalTo(lastBooking.getId()));
+            assertThat(returnedItem.getLastBooking().getItem().getId(), equalTo(lastBooking.getItem().getId()));
+            assertThat(returnedItem.getLastBooking().getBooker().getId(), equalTo(lastBooking.getBooker().getId()));
+            assertThat(returnedItem.getLastBooking().getStatus(), equalTo(lastBooking.getStatus()));
+            assertTrue(returnedItem.getLastBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                    .isEqual(lastBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+            assertTrue(returnedItem.getLastBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                    .isEqual(lastBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
+            assertThat(returnedItem.getNextBooking().getId(), equalTo(nextBooking.getId()));
+            assertThat(returnedItem.getNextBooking().getItem().getId(), equalTo(nextBooking.getItem().getId()));
+            assertThat(returnedItem.getNextBooking().getBooker().getId(), equalTo(nextBooking.getBooker().getId()));
+            assertThat(returnedItem.getNextBooking().getStatus(), equalTo(nextBooking.getStatus()));
+            assertTrue(returnedItem.getNextBooking().getStart().truncatedTo(ChronoUnit.SECONDS)
+                    .isEqual(nextBooking.getStart().truncatedTo(ChronoUnit.SECONDS)));
+            assertTrue(returnedItem.getNextBooking().getEnd().truncatedTo(ChronoUnit.SECONDS)
+                    .isEqual(nextBooking.getEnd().truncatedTo(ChronoUnit.SECONDS)));
+            assertThat(returnedItem.getComments().size(), equalTo(1));
+            assertThat(returnedItem.getComments().get(0).getText(), equalTo(comment.getText()));
+        }
     }
 }

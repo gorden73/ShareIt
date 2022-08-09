@@ -139,8 +139,8 @@ class ItemServiceImplUnitTest {
     void shouldThrowElementNotFoundExceptionWhenAddItemWhenUserIsNotFound() {
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
-        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class, () -> itemService.addItem(1L
-                , item1));
+        ElementNotFoundException exception = assertThrows(ElementNotFoundException.class, () -> itemService.addItem(1L,
+                item1));
         assertTrue(exception.getMessage().contains("пользователь с таким id"));
     }
 

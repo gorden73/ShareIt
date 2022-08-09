@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,7 +17,7 @@ import java.time.LocalDateTime;
 @Table(name = "comments")
 @NoArgsConstructor
 @EqualsAndHashCode
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

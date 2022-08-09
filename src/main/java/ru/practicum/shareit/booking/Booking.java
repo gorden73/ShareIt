@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "bookings")
 @NoArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -21,30 +21,31 @@ class ItemRepositoryTest {
 
     @Test
     void verifyRepositoryBySearchAvailableItems() {
-        Item item = new Item("Thing", "Cool thing", true, 0);
-        item.setId(1L);
+        Item item1 = new Item("ThingNeeded", "Cool thing1", true, 0);
+        item1.setId(1L);
         Item item2 = new Item("Thing2", "Cool thing2", true, 0);
         item2.setId(2L);
         User user = new User(1L, "John", "item@mail.ru");
-        item.setOwner(user);
+        item1.setOwner(user);
         item2.setOwner(user);
         em.merge(user);
-        em.merge(item);
+        em.merge(item1);
+        em.merge(item2);
         TypedQuery<Item> query = em.getEntityManager().createQuery("select i from Item as i " +
                 "where (upper(i.name) like upper(concat('%', :text, '%')) " +
                 "or upper(i.description) like upper(concat('%', :text, '%'))) " +
                 "and i.isAvailable = true", Item.class);
-        List<Item> availableItems = query.setParameter("text", "thing").getResultList();
+        List<Item> availableItems = query.setParameter("text", "needed").getResultList();
         assertThat(availableItems, hasSize(1));
-        for (Item item1 : availableItems) {
-            assertThat(item1.getId(), equalTo(item.getId()));
-            assertThat(item1.getName(), equalTo(item.getName()));
-            assertThat(item1.getDescription(), equalTo(item.getDescription()));
-            assertThat(item1.getIsAvailable(), equalTo(item.getIsAvailable()));
-            assertThat(item1.getOwner().getId(), equalTo(item.getOwner().getId()));
-            assertThat(item1.getLastBooking(), nullValue());
-            assertThat(item1.getNextBooking(), nullValue());
-            assertThat(item1.getComments(), hasSize(0));
+        for (Item item3 : availableItems) {
+            assertThat(item3.getId(), equalTo(item1.getId()));
+            assertThat(item3.getName(), equalTo(item1.getName()));
+            assertThat(item3.getDescription(), equalTo(item1.getDescription()));
+            assertThat(item3.getIsAvailable(), equalTo(item1.getIsAvailable()));
+            assertThat(item3.getOwner().getId(), equalTo(item1.getOwner().getId()));
+            assertThat(item3.getLastBooking(), nullValue());
+            assertThat(item3.getNextBooking(), nullValue());
+            assertThat(item3.getComments(), hasSize(0));
         }
     }
 }

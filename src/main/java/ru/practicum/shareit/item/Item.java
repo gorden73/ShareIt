@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "items")
 @NoArgsConstructor
 @ToString
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

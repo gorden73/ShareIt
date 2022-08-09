@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
 import ru.practicum.shareit.exceptions.ValidationException;

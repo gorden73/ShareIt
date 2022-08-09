@@ -1,14 +1,16 @@
 package ru.practicum.shareit.requests;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -16,8 +18,6 @@ import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -65,7 +65,7 @@ class ItemRequestServiceImplIntegrationTest {
     void getAllItemRequestsByOwner() {
         Collection<ItemRequest> ownerRequests = requestService.getAllItemRequestsByOwner(1L);
         assertThat(ownerRequests, hasSize(1));
-        for(ItemRequest req : ownerRequests) {
+        for (ItemRequest req : ownerRequests) {
             assertThat(ownerRequests, hasItem(allOf(
                     hasProperty("id", equalTo(req.getId())),
                     hasProperty("description", equalTo(req.getDescription())),

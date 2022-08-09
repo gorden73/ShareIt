@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.requests.ItemRequest;
@@ -89,7 +90,7 @@ class ItemServiceImplIntegrationTest {
     void shouldGetOwnerItems() {
         Collection<Item> items = itemService.getOwnerItems(1L, 0, 1);
         assertThat(items, hasSize(1));
-        for(Item returnedItem : items) {
+        for (Item returnedItem : items) {
             assertThat(returnedItem.getId(), equalTo(item1.getId()));
             assertThat(returnedItem.getName(), equalTo(item1.getName()));
             assertThat(returnedItem.getDescription(), equalTo(item1.getDescription()));

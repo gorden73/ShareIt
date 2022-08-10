@@ -68,10 +68,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking setApprovedByOwner(long userId, long bookingId, boolean approved) {
-        if (!userRepository.existsById(userId)) {
-            log.error("Пользователь id{} не найден.", userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
+        checkUserExists(userId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("бронирование с таким id%d.", bookingId)));
         if (booking.getItem().getOwner().getId() != userId) {
@@ -106,10 +103,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getBookingById(long userId, long bookingId) {
-        if (!userRepository.existsById(userId)) {
-            log.error("Пользователь id{} не найден.", userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
+        checkUserExists(userId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("бронирование с таким id%d.", bookingId)));
         if (booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId) {
@@ -123,10 +117,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<Booking> getAllBookingsByUserId(long bookerId, String status, int from, int size) {
         Pageable page = checkPageBorders(from, size);
-        if (!userRepository.existsById(bookerId)) {
-            log.error("Пользователь id{} не найден.", bookerId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", bookerId));
-        }
+        checkUserExists(bookerId);
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
             log.info("Запрошен список всех бронирований арендатора id{}.", bookerId);
@@ -156,10 +147,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<Booking> getAllBookingsByOwnerId(long ownerId, String status, int from, int size) {
         Pageable page = checkPageBorders(from, size);
-        if (!userRepository.existsById(ownerId)) {
-            log.error("Пользователь id{} не найден.", ownerId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", ownerId));
-        }
+        checkUserExists(ownerId);
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
             log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
@@ -194,5 +182,12 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException(String.format("неверное значение size %d.", size));
         }
         return PageRequest.of(from, size);
+    }
+
+    private void checkUserExists(long userId) {
+        if (!userRepository.existsById(userId)) {
+            log.error("Пользователь id{} не найден.", userId);
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
+        }
     }
 }

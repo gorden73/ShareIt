@@ -2,16 +2,20 @@ package ru.practicum.shareit.item;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
+import ru.practicum.shareit.requests.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,13 +28,17 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
+    private final ItemRequestRepository requestRepository;
+
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
-                           BookingRepository bookingRepository, CommentRepository commentRepository) {
+                           BookingRepository bookingRepository, CommentRepository commentRepository,
+                           ItemRequestRepository requestRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.requestRepository = requestRepository;
     }
 
     @Override
@@ -39,6 +47,9 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("пользователь с таким id%d.", userId)));
         item.setOwner(user);
+        if (item.getRequestId() > 0) {
+            requestRepository.findById(item.getRequestId()).ifPresent(item::setRequest);
+        }
         log.info("Добавлена новая вещь {} пользователя id{}.", item, item.getOwner().getId());
         return itemRepository.save(item);
     }
@@ -102,44 +113,47 @@ public class ItemServiceImpl implements ItemService {
 
     private void checkInputDataByAddItem(Item item) {
         if (item.getName() == null || item.getName().isBlank()) {
-            throw new ValidationException("item.Name = null или item.Name состоит из пробелов");
+            throw new ValidationException("item.Name = null или item.Name состоит из пробелов.");
         }
         if (item.getDescription() == null || item.getDescription().isBlank()) {
-            throw new ValidationException("item.Description = null");
+            throw new ValidationException("item.Description = null или состоит из пробелов.");
         }
         if (item.getIsAvailable() == null) {
-            throw new ValidationException("item.isAvailable = null");
+            throw new ValidationException("item.isAvailable = null.");
         }
     }
 
-    private void checkUserById(long userId) {
+    public void checkUserById(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new ElementNotFoundException(String.format("пользователь с id%d.", userId));
+            throw new ElementNotFoundException(String.format("Не найден пользователь с id%d.", userId));
         }
     }
 
     @Override
-    public Collection<Item> getOwnerItems(long ownerId) {
+    public Collection<Item> getOwnerItems(long ownerId, int from, int size) {
+        Pageable page = PageRequest.of(from, size);
         checkUserById(ownerId);
         log.info("Запрошен список вещей пользователя {}.", ownerId);
-        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId);
+        Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId, page);
         if (ownerItems.isEmpty()) {
             return List.of();
         }
         return ownerItems.stream()
                 .map(this::addCommentsIntoItem)
                 .map(this::addIntoItemLastAndNextBookings)
+                .sorted(Comparator.comparing(Item::getId))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<Item> searchAvailableItems(String text) {
+    public Collection<Item> searchAvailableItems(String text, int from, int size) {
+        Pageable page = checkPageBorders(from, size);
         if (text.isBlank()) {
             log.info("Пустой поисковый запрос.");
             return List.of();
         }
         log.info("Поиск вещей по запросу - {}.", text);
-        return itemRepository.searchAvailableItems(text);
+        return itemRepository.searchAvailableItems(text, page);
     }
 
     @Override
@@ -164,5 +178,20 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(LocalDateTime.now());
         log.info("Добавлен новый комментарий к вещи id{}.", itemId);
         return commentRepository.save(comment);
+    }
+
+    private Pageable checkPageBorders(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException(String.format("недопустимое значение from %d.", from));
+        }
+        if (size < 1) {
+            throw new ValidationException(String.format("недопустимое значение size %d.", size));
+        }
+        return PageRequest.of(from, size);
+    }
+
+    @Override
+    public List<Item> searchAvailableItemsByRequestId(long requestId) {
+        return itemRepository.searchAvailableItemsByRequest_Id(requestId);
     }
 }

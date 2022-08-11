@@ -42,8 +42,10 @@ public class BookingController {
 
     @GetMapping
     public Collection<BookingDto> getAllBookingsByUserId(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
-                                                         @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getAllBookingsByUserId(userId, state)
+                                                         @RequestParam(defaultValue = "ALL") String state,
+                                                         @RequestParam(defaultValue = "0") int from,
+                                                         @RequestParam(defaultValue = "10") int size) {
+        return bookingService.getAllBookingsByUserId(userId, state, from, size)
                 .stream()
                 .map(BookingMapper::toBookingDto)
                 .sorted(Comparator.comparing(BookingDto::getStart).reversed())
@@ -52,8 +54,10 @@ public class BookingController {
 
     @GetMapping("/owner")
     public Collection<BookingDto> getAllBookingsByOwnerId(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
-                                                          @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getAllBookingsByOwnerId(userId, state)
+                                                          @RequestParam(defaultValue = "ALL") String state,
+                                                          @RequestParam(defaultValue = "0") int from,
+                                                          @RequestParam(defaultValue = "10") int size) {
+        return bookingService.getAllBookingsByOwnerId(userId, state, from, size)
                 .stream()
                 .map(BookingMapper::toBookingDto)
                 .sorted(Comparator.comparing(BookingDto::getStart).reversed())

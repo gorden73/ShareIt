@@ -43,16 +43,20 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemOwnerDto> getOwnerItems(@RequestHeader("X-Sharer-User-Id") @NotNull long ownerId) {
-        return itemService.getOwnerItems(ownerId)
+    public Collection<ItemOwnerDto> getOwnerItems(@RequestHeader("X-Sharer-User-Id") @NotNull long ownerId,
+                                                  @RequestParam(defaultValue = "0") int from,
+                                                  @RequestParam(defaultValue = "10") int size) {
+        return itemService.getOwnerItems(ownerId, from, size)
                 .stream()
                 .map(ItemMapper::toItemOwnerDto)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchAvailableItems(@RequestParam String text) {
-        return itemService.searchAvailableItems(text)
+    public Collection<ItemDto> searchAvailableItems(@RequestParam String text,
+                                                    @RequestParam(defaultValue = "0") int from,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        return itemService.searchAvailableItems(text, from, size)
                 .stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());

@@ -1,9 +1,8 @@
 package ru.practicum.shareit.item;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import lombok.*;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.requests.ItemRequest;
 import ru.practicum.shareit.user.User;
@@ -18,6 +17,8 @@ import java.util.List;
 @Entity
 @Table(name = "items")
 @NoArgsConstructor
+@ToString
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,15 +34,18 @@ public class Item {
     @JoinColumn(name = "request_id")
     private ItemRequest request;
     @Transient
+    private long requestId;
+    @Transient
     private Booking lastBooking;
     @Transient
     private Booking nextBooking;
     @Transient
     private List<Comment> comments = new ArrayList<>();
 
-    public Item(String name, String description, Boolean available) {
+    public Item(String name, String description, Boolean available, long requestId) {
         this.name = name;
         this.description = description;
         this.isAvailable = available;
+        this.requestId = requestId;
     }
 }

@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
@@ -66,10 +68,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking setApprovedByOwner(long userId, long bookingId, boolean approved) {
-        if (!userRepository.existsById(userId)) {
-            log.error("Пользователь id{} не найден.", userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
+        checkUserExists(userId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("бронирование с таким id%d.", bookingId)));
         if (booking.getItem().getOwner().getId() != userId) {
@@ -104,10 +103,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getBookingById(long userId, long bookingId) {
-        if (!userRepository.existsById(userId)) {
-            log.error("Пользователь id{} не найден.", userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
-        }
+        checkUserExists(userId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ElementNotFoundException(
                 String.format("бронирование с таким id%d.", bookingId)));
         if (booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId) {
@@ -119,44 +115,79 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<Booking> getAllBookingsByUserId(long bookerId, String status) {
-        if (!userRepository.existsById(bookerId)) {
-            log.error("Пользователь id{} не найден.", bookerId);
-            throw new ElementNotFoundException(String.format("арендатор с таким id%d.", bookerId));
-        }
+    public Collection<Booking> getAllBookingsByUserId(long bookerId, String status, int from, int size) {
+        Pageable page = checkPageBorders(from, size);
+        checkUserExists(bookerId);
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
             log.info("Запрошен список всех бронирований арендатора id{}.", bookerId);
-            return bookingRepository.findBookingsByBooker_Id(bookerId);
+            return bookingRepository.findBookingsByBooker_Id(bookerId, page);
         } else {
-            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED").contains(status1)) {
+            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED", "APPROVED").contains(status1)) {
                 log.error("Введено неверное значение статуса {}.", status1);
-                throw new ValidationException("значение статуса может быть только CURRENT, PAST, FUTURE, WAITING, " +
-                        "REJECTED");
+                throw new IllegalArgumentException(String.format("Unknown state: %s", status1));
+            }
+            switch (status1) {
+                case ("CURRENT"):
+                    log.info("Запрошен список бронирований арендатора id{} со статусом CURRENT.", bookerId);
+                    return bookingRepository.findByBooker_IdAndStartBeforeAndEndAfter(bookerId, LocalDateTime.now(),
+                            LocalDateTime.now(), page);
+                case ("PAST"):
+                    log.info("Запрошен список бронирований арендатора id{} со статусом PAST.", bookerId);
+                    return bookingRepository.findByBooker_IdAndEndBefore(bookerId, LocalDateTime.now(), page);
+                case ("FUTURE"):
+                    log.info("Запрошен список бронирований арендатора id{} со статусом FUTURE.", bookerId);
+                    return bookingRepository.findByBooker_IdAndStartAfter(bookerId, LocalDateTime.now(), page);
             }
             log.info("Запрошен список бронирований арендатора id{} со статусом {}.", bookerId, status1);
-            return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(status1));
+            return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(status1), page);
         }
     }
 
     @Override
-    public Collection<Booking> getAllBookingsByOwnerId(long ownerId, String status) {
-        if (!userRepository.existsById(ownerId)) {
-            log.error("Пользователь id{} не найден.", ownerId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", ownerId));
-        }
+    public Collection<Booking> getAllBookingsByOwnerId(long ownerId, String status, int from, int size) {
+        Pageable page = checkPageBorders(from, size);
+        checkUserExists(ownerId);
         String status1 = status.toUpperCase();
         if (status1.equals("ALL")) {
             log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
-            return bookingRepository.findBookingsByOwnerId(ownerId);
+            return bookingRepository.findBookingsByOwnerId(ownerId, page);
         } else {
-            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED").contains(status1)) {
+            if (!List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED", "APPROVED").contains(status1)) {
                 log.error("Введено неверное значение статуса {}.", status1);
-                throw new ValidationException("значение статуса может быть только CURRENT, PAST, FUTURE, WAITING, " +
-                        "REJECTED");
+                throw new IllegalArgumentException(String.format("Unknown state: %s", status1));
+            }
+            switch (status1) {
+                case ("CURRENT"):
+                    log.info("Запрошен список бронирований владельца id{} со статусом CURRENT.", ownerId);
+                    return bookingRepository.findByOwner_IdAndStartBeforeAndEndAfter(ownerId, LocalDateTime.now(),
+                            LocalDateTime.now(), page);
+                case ("PAST"):
+                    log.info("Запрошен список бронирований владельца id{} со статусом PAST.", ownerId);
+                    return bookingRepository.findByOwner_IdAndEndBefore(ownerId, LocalDateTime.now(), page);
+                case ("FUTURE"):
+                    log.info("Запрошен список бронирований владельца id{} со статусом FUTURE.", ownerId);
+                    return bookingRepository.findByOwner_IdAndStartAfter(ownerId, LocalDateTime.now(), page);
             }
             log.info("Запрошен список бронирований владельца id{} со статусом {}.", ownerId, status1);
-            return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status1));
+            return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status1), page);
+        }
+    }
+
+    private Pageable checkPageBorders(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException(String.format("неверное значение from %d.", from));
+        }
+        if (size < 1) {
+            throw new ValidationException(String.format("неверное значение size %d.", size));
+        }
+        return PageRequest.of(from, size);
+    }
+
+    private void checkUserExists(long userId) {
+        if (!userRepository.existsById(userId)) {
+            log.error("Пользователь id{} не найден.", userId);
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
         }
     }
 }

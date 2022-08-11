@@ -1,7 +1,10 @@
 package ru.practicum.shareit.booking;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.Status;
@@ -15,6 +18,8 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @Entity
 @Table(name = "bookings")
+@NoArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,9 +38,6 @@ public class Booking {
     private User booker;
     @Enumerated(EnumType.STRING)
     private Status status;
-
-    public Booking() {
-    }
 
     public Booking(LocalDateTime start, LocalDateTime end, long itemId) {
         this.start = start;

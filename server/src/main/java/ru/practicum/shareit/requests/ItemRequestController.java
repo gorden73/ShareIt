@@ -29,8 +29,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public Collection<ItemRequestDto> getAllItemRequestsByOtherUsers(@RequestHeader("X-Sharer-User-Id")
                                                                      long userId,
-                                                                     @RequestParam(defaultValue = "0") int from,
-                                                                     @RequestParam(defaultValue = "10") int size) {
+                                                                     @RequestParam int from,
+                                                                     @RequestParam int size) {
         return ItemRequestMapper.toDtoCollection(service.getAllItemRequestsByOtherUsers(userId, from, size));
     }
 

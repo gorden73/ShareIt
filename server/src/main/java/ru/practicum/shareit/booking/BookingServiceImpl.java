@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
@@ -37,17 +38,16 @@ public class BookingServiceImpl implements BookingService {
                 String.format("пользователь с таким id%d.", userId)));
         Item item = itemRepository.findById(booking.getItemId()).orElseThrow(() -> new ElementNotFoundException(
                 String.format("вещь с id%d.", booking.getItemId())));
-        booking.setItem(item);
-        if (user.equals(booking.getItem().getOwner())) {
+        if (user.equals(item.getOwner())) {
             log.error("Владелец вещи не может арендовать сам у себя.");
             throw new ElementNotFoundException("Владелец вещи не может арендовать сам у себя.");
         }
-        booking.setBooker(user);
-        if (!booking.getItem().getIsAvailable()) {
-            log.error("Бронирование вещи id{} недоступно.", booking.getItem().getId());
-            throw new ValidationException(String.format("бронирование вещи id%d недоступно.",
-                    booking.getItem().getId()));
+        if (!item.getIsAvailable()) {
+            log.error("Бронирование вещи id{} недоступно.", item.getId());
+            throw new ValidationException(String.format("бронирование вещи id%d недоступно.", item.getId()));
         }
+        booking.setItem(item);
+        booking.setBooker(user);
         booking.setStatus(Status.WAITING);
         log.info("Добавлено бронирование вещи id{}.", item.getId());
         return bookingRepository.save(booking);
@@ -103,7 +103,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<Booking> getAllBookingsByUserId(long bookerId, String status, int from, int size) {
-        Pageable page = PageRequest.of(from, size);
+        int page1 = from / size;
+        Pageable page = PageRequest.of(page1, size, Sort.by("start").descending());
         checkUserExists(bookerId);
         switch (status) {
             case ("ALL"):
@@ -126,7 +127,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<Booking> getAllBookingsByOwnerId(long ownerId, String status, int from, int size) {
-        Pageable page = PageRequest.of(from, size);
+        int page1 = from / size;
+        Pageable page = PageRequest.of(page1, size, Sort.by("start").descending());
         checkUserExists(ownerId);
         switch (status) {
             case ("ALL"):
@@ -146,10 +148,11 @@ public class BookingServiceImpl implements BookingService {
         log.info("Запрошен список бронирований владельца id{} со статусом {}.", ownerId, status);
         return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status), page);
     }
-    private void checkUserExists(long userId){
-        if(!userRepository.existsById(userId)){
-            log.error("Пользователь id{} не найден.",userId);
-            throw new ElementNotFoundException(String.format("пользователь с таким id%d.",userId));
+
+    private void checkUserExists(long userId) {
+        if (!userRepository.existsById(userId)) {
+            log.error("Пользователь id{} не найден.", userId);
+            throw new ElementNotFoundException(String.format("пользователь с таким id%d.", userId));
         }
     }
 }

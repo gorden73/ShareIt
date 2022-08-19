@@ -20,9 +20,6 @@ public class ItemRequestController {
     @PostMapping
     public Object addRequest(@RequestHeader("X-Sharer-User-Id") @NotNull long userId,
                              @Valid @RequestBody ItemRequestDto dto) {
-        if (dto.getDescription().isBlank()) {
-            throw new ValidationException("описание запроса пустое или состоит из пробелов.");
-        }
         return requestClient.addRequest(userId, dto);
     }
 

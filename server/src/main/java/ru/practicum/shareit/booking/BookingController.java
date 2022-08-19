@@ -6,7 +6,6 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,7 +28,7 @@ public class BookingController {
     @PatchMapping("/{bookingId}")
     public BookingDto setApprovedByOwner(@RequestHeader("X-Sharer-User-Id") long userId,
                                          @PathVariable long bookingId,
-                                         @RequestParam(required = false) boolean approved) {
+                                         @RequestParam Boolean approved) {
         return BookingMapper.toBookingDto(bookingService.setApprovedByOwner(userId, bookingId, approved));
     }
 
@@ -41,25 +40,23 @@ public class BookingController {
 
     @GetMapping
     public Collection<BookingDto> getAllBookingsByUserId(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                         @RequestParam(defaultValue = "ALL") String state,
-                                                         @RequestParam(defaultValue = "0") int from,
-                                                         @RequestParam(defaultValue = "10") int size) {
+                                                         @RequestParam String state,
+                                                         @RequestParam int from,
+                                                         @RequestParam int size) {
         return bookingService.getAllBookingsByUserId(userId, state, from, size)
                 .stream()
                 .map(BookingMapper::toBookingDto)
-                .sorted(Comparator.comparing(BookingDto::getStart).reversed())
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/owner")
     public Collection<BookingDto> getAllBookingsByOwnerId(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                          @RequestParam(defaultValue = "ALL") String state,
-                                                          @RequestParam(defaultValue = "0") int from,
-                                                          @RequestParam(defaultValue = "10") int size) {
+                                                          @RequestParam String state,
+                                                          @RequestParam int from,
+                                                          @RequestParam int size) {
         return bookingService.getAllBookingsByOwnerId(userId, state, from, size)
                 .stream()
                 .map(BookingMapper::toBookingDto)
-                .sorted(Comparator.comparing(BookingDto::getStart).reversed())
                 .collect(Collectors.toList());
     }
 }

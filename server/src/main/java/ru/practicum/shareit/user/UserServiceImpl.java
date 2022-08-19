@@ -3,6 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
@@ -47,6 +48,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(long userId, User updatedUser) {
         User user = getUserById(userId);
+        if (updatedUser.getName() != null) {
+            user.setName(updatedUser.getName());
+        }
+        if (updatedUser.getEmail() != null) {
+            user.setEmail(updatedUser.getEmail());
+        }
         try {
             log.info(String.format("Обновлён пользователь с id%d.", userId));
             return userRepository.save(user);
@@ -58,8 +65,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void removeUserById(long id) {
-        log.info(String.format("Удалён пользователь с id%d.", id));
-        userRepository.deleteById(id);
+    public HttpStatus removeUserById(long id) {
+        try {
+            userRepository.deleteById(id);
+            log.info(String.format("Удалён пользователь с id%d.", id));
+            return HttpStatus.OK;
+        } catch (Exception e) {
+            log.error(String.format("Не найден пользователь с id%d.", id));
+            throw new ElementNotFoundException(String.format("пользователь с id%d.", id));
+        }
     }
 }

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
@@ -41,17 +42,11 @@ public class UserController {
     public UserDto updateUser(@PathVariable long userId,
                               @RequestBody UserDto userDto) {
         User updatedUser = UserMapper.toUser(userDto);
-        if (userDto.getName() != null) {
-            updatedUser.setName(userDto.getName());
-        }
-        if (userDto.getEmail() != null) {
-            updatedUser.setEmail(userDto.getEmail());
-        }
         return UserMapper.toUserDto(userService.updateUser(userId, updatedUser));
     }
 
     @DeleteMapping("/{userId}")
-    public void removeUserById(@PathVariable long userId) {
-        userService.removeUserById(userId);
+    public HttpStatus removeUserById(@PathVariable long userId) {
+        return userService.removeUserById(userId);
     }
 }

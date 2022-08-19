@@ -36,7 +36,7 @@ public class UserController {
 
     @PatchMapping("/{userId}")
     public Object updateUser(@PathVariable long userId,
-                              @RequestBody UserDto userDto) {
+                             @RequestBody UserDto userDto) {
         if (userDto.getEmail() != null) {
             checkValidEmailAddress(userDto.getEmail());
         }
@@ -44,8 +44,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public void removeUserById(@PathVariable long userId) {
-        userClient.removeUserById(userId);
+    public Object removeUserById(@PathVariable long userId) {
+        return userClient.removeUserById(userId);
     }
 
     private void checkValidEmailAddress(String email) {

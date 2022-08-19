@@ -43,8 +43,8 @@ public class ItemController {
 
     @GetMapping
     public Collection<ItemOwnerDto> getOwnerItems(@RequestHeader("X-Sharer-User-Id") long ownerId,
-                                                  @RequestParam(defaultValue = "0") int from,
-                                                  @RequestParam(defaultValue = "10") int size) {
+                                                  @RequestParam int from,
+                                                  @RequestParam int size) {
         return itemService.getOwnerItems(ownerId, from, size)
                 .stream()
                 .map(ItemMapper::toItemOwnerDto)
@@ -53,8 +53,8 @@ public class ItemController {
 
     @GetMapping("/search")
     public Collection<ItemDto> searchAvailableItems(@RequestParam String text,
-                                                    @RequestParam(defaultValue = "0") int from,
-                                                    @RequestParam(defaultValue = "10") int size) {
+                                                    @RequestParam int from,
+                                                    @RequestParam int size) {
         return itemService.searchAvailableItems(text, from, size)
                 .stream()
                 .map(ItemMapper::toItemDto)

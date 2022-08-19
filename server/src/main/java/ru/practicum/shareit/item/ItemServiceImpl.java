@@ -14,10 +14,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,7 +120,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Запрошен список вещей пользователя {}.", ownerId);
         Collection<Item> ownerItems = itemRepository.findItemsByOwnerId(ownerId, page);
         if (ownerItems.isEmpty()) {
-            return List.of();
+            return Collections.emptyList();
         }
         return ownerItems.stream()
                 .map(this::addCommentsIntoItem)

@@ -4,7 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.shareit.booking.dto.BookingOwnerDto;
+import ru.practicum.shareit.dto.BookingOwnerDto;
 
 import java.util.List;
 

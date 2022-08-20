@@ -9,7 +9,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-@Controller
+@RestController
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
 public class UserController {

@@ -1,10 +1,10 @@
-package ru.practicum.shareit.booking.dto;
+package ru.practicum.shareit.dto;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.shareit.Status;
+import ru.practicum.shareit.item.Status;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.dto.UserDto;
 

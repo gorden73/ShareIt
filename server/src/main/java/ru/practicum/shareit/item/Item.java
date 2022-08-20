@@ -3,7 +3,7 @@ package ru.practicum.shareit.item;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
-import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.Booking;
 import ru.practicum.shareit.requests.ItemRequest;
 import ru.practicum.shareit.user.User;
 

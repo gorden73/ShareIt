@@ -13,7 +13,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 
-@Controller
+@RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
 @Slf4j

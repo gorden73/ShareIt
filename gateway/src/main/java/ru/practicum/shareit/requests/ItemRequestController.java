@@ -10,7 +10,7 @@ import ru.practicum.shareit.requests.dto.ItemRequestDto;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-@Controller
+@RestController
 @RequestMapping(path = "/requests")
 @RequiredArgsConstructor
 @Validated

@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -316,35 +316,12 @@ class BookingServiceImplUnitTest {
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenGetAllBookingsByUserIdWhenFromLessThanZero() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.getAllBookingsByUserId(2L, "all", -1, 2));
-        assertTrue(exception.getMessage().contains("неверное значение from"));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenGetAllBookingsByUserIdWhenFromLessThanOne() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.getAllBookingsByUserId(2L, "all", 0, 0));
-        assertTrue(exception.getMessage().contains("неверное значение size"));
-    }
-
-    @Test
     void shouldThrowElementNotFoundExceptionWhenGetAllBookingsByUserIdWhenUserNotFound() {
         when(userRepository.existsById(anyLong()))
                 .thenReturn(false);
         ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
                 () -> bookingService.getAllBookingsByUserId(3L, "all", 0, 2));
         assertTrue(exception.getMessage().contains("пользователь с таким id"));
-    }
-
-    @Test
-    void shouldThrowIllegalArgumentExceptionWhenGetAllBookingsByUserIdWhenUnsupportedStatus() {
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> bookingService.getAllBookingsByUserId(2L, "lala", 0, 2));
-        assertTrue(exception.getMessage().contains("Unknown state"));
     }
 
     @Test
@@ -443,35 +420,12 @@ class BookingServiceImplUnitTest {
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenGetAllBookingsByOwnerIdWhenFromLessThanZero() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.getAllBookingsByOwnerId(2L, "all", -1, 2));
-        assertTrue(exception.getMessage().contains("неверное значение from"));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenGetAllBookingsByOwnerIdWhenFromLessThanOne() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.getAllBookingsByOwnerId(2L, "all", 0, 0));
-        assertTrue(exception.getMessage().contains("неверное значение size"));
-    }
-
-    @Test
     void shouldThrowElementNotFoundExceptionWhenGetAllBookingsByOwnerIdWhenUserNotFound() {
         when(userRepository.existsById(anyLong()))
                 .thenReturn(false);
         ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
                 () -> bookingService.getAllBookingsByOwnerId(3L, "all", 0, 2));
         assertTrue(exception.getMessage().contains("пользователь с таким id"));
-    }
-
-    @Test
-    void shouldThrowIllegalArgumentExceptionWhenGetAllBookingsByOwnerIdWhenUnsupportedStatus() {
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> bookingService.getAllBookingsByOwnerId(1L, "lala", 0, 2));
-        assertTrue(exception.getMessage().contains("Unknown state"));
     }
 
     @Test

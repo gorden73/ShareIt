@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.shareit.Booking;
-import ru.practicum.shareit.BookingRepository;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.requests.ItemRequest;
@@ -98,41 +98,6 @@ class ItemServiceImplUnitTest {
         assertThat(savedItem.getName(), equalTo(item1.getName()));
         assertThat(savedItem.getDescription(), equalTo(item1.getDescription()));
         assertThat(savedItem.getIsAvailable(), equalTo(item1.getIsAvailable()));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddItemWithNameIsNull() {
-        item1.setName(null);
-        ValidationException exception = assertThrows(ValidationException.class, () -> itemService.addItem(1L, item1));
-        assertTrue(exception.getMessage().contains("item.Name = null или item.Name состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddItemWithNameConsistsOfSpaces() {
-        item1.setName("");
-        ValidationException exception = assertThrows(ValidationException.class, () -> itemService.addItem(1L, item1));
-        assertTrue(exception.getMessage().contains("item.Name = null или item.Name состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddItemWithDescriptionIsNull() {
-        item1.setDescription(null);
-        ValidationException exception = assertThrows(ValidationException.class, () -> itemService.addItem(1L, item1));
-        assertTrue(exception.getMessage().contains("item.Description = null или состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddItemWithDescriptionConsistsOfSpaces() {
-        item1.setDescription("");
-        ValidationException exception = assertThrows(ValidationException.class, () -> itemService.addItem(1L, item1));
-        assertTrue(exception.getMessage().contains("item.Description = null или состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddItemWithIsAvailableIsNull() {
-        item1.setIsAvailable(null);
-        ValidationException exception = assertThrows(ValidationException.class, () -> itemService.addItem(1L, item1));
-        assertTrue(exception.getMessage().contains("item.isAvailable = null."));
     }
 
     @Test
@@ -326,20 +291,6 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenSearchAvailableItemsWhenFromLessThanZero() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> itemService.searchAvailableItems("Newspaper", -1, 1));
-        assertTrue(exception.getMessage().contains("недопустимое значение from"));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenSearchAvailableItemsWhenSizeLessThanOne() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> itemService.searchAvailableItems("Newspaper", 0, 0));
-        assertTrue(exception.getMessage().contains("недопустимое значение size"));
-    }
-
-    @Test
     void shouldReturnEmptyCollectionWhenSearchAvailableItemsWhenRequestTextIsBlank() {
         when(itemRepository.searchAvailableItems(anyString(), any(Pageable.class)))
                 .thenReturn(List.of());
@@ -368,14 +319,6 @@ class ItemServiceImplUnitTest {
         assertThat(savedComment.getItem().getDescription(), equalTo(comment.getItem().getDescription()));
         assertThat(savedComment.getItem().getIsAvailable(), equalTo(comment.getItem().getIsAvailable()));
         assertThat(savedComment.getItem().getRequest(), nullValue());
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddCommentByItemIdWhenTextIsBlank() {
-        comment.setText(" ");
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> itemService.addCommentByItemId(2L, comment, 1L));
-        assertTrue(exception.getMessage().contains("отзыв пустой или состоит из пробелов."));
     }
 
     @Test

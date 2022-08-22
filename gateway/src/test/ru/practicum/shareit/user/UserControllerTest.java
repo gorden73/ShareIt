@@ -11,9 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import ru.practicum.shareit.ShareItGateway;
-import ru.practicum.shareit.exceptions.ElementNotFoundException;
-import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
-import ru.practicum.shareit.exceptions.ValidationException;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = ShareItGateway.class)
 class UserControllerTest {
     @MockBean
-    private UserService service;
+    private UserClient client;
 
     @Autowired
     private MockMvc mvc;
@@ -39,22 +37,22 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    private User user1;
-    private User user2;
+    private UserDto user1;
+    private UserDto user2;
 
-    private List<User> users = new ArrayList<>();
+    private List<UserDto> users = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
-        user1 = new User(1L, "John1", "john.doe1@mail.com");
-        user2 = new User(2L, "John2", "john.doe2@mail.com");
+        user1 = new UserDto(1L, "John1", "john.doe1@mail.com");
+        user2 = new UserDto(2L, "John2", "john.doe2@mail.com");
     }
 
     @Test
     void getAllUsersWhen200IsReturned() throws Exception {
         users.add(user1);
         users.add(user2);
-        when(service.getAllUsers())
+        when(client.getAllUsers())
                 .thenReturn(users);
         mvc.perform(get("/users")
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -70,7 +68,7 @@ class UserControllerTest {
 
     @Test
     void addUserWhen200IsReturned() throws Exception {
-        when(service.addUser(any(User.class)))
+        when(client.addUser(any(UserDto.class)))
                 .thenReturn(user1);
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user1))
@@ -84,9 +82,8 @@ class UserControllerTest {
     }
 
     @Test
-    void addUserWhen400IsReturned() throws Exception {
-        when(service.addUser(any(User.class)))
-                .thenThrow(ValidationException.class);
+    void addUserWhenEmailIsNullAnd400IsReturned() throws Exception {
+        user1.setEmail(null);
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user1))
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -97,21 +94,32 @@ class UserControllerTest {
     }
 
     @Test
-    void addUserWhen409IsReturned() throws Exception {
-        when(service.addUser(any(User.class)))
-                .thenThrow(EmailAlreadyExistsException.class);
+    void addUserWhenEmailIsBlankAnd400IsReturned() throws Exception {
+        user1.setEmail("");
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().is(409));
+                .andExpect(status().is(400));
+    }
+
+    @Test
+    void addUserWhenEmailIsNotValidFormatAnd400IsReturned() throws Exception {
+        user1.setEmail("email");
+        mvc.perform(post("/users")
+                        .content(mapper.writeValueAsString(user1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().is(400));
     }
 
     @Test
     void getUserByIdWhen200IsReturned() throws Exception {
-        when(service.getUserById(anyLong()))
+        when(client.getUserById(anyLong()))
                 .thenReturn(user1);
         mvc.perform(get("/users/1")
                         .content(mapper.writeValueAsString(user1))
@@ -125,20 +133,8 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByIdWhen404IsReturned() throws Exception {
-        when(service.getUserById(anyLong()))
-                .thenThrow(ElementNotFoundException.class);
-        mvc.perform(get("/users/1")
-                        .content(mapper.writeValueAsString(user1))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(404));
-    }
-
-    @Test
     void updateUserWhen200IsReturned() throws Exception {
-        when(service.updateUser(anyLong(), any(User.class)))
+        when(client.updateUser(anyLong(), any(UserDto.class)))
                 .thenReturn(user1);
         mvc.perform(patch("/users/1")
                         .content(mapper.writeValueAsString(user1))
@@ -152,39 +148,14 @@ class UserControllerTest {
     }
 
     @Test
-    void updateUserWhen400IsReturned() throws Exception {
-        when(service.updateUser(anyLong(), any(User.class)))
-                .thenThrow(ValidationException.class);
+    void updateUserWhenEmailIsNotValidFormatAnd400IsReturned() throws Exception {
+        user1.setEmail("email");
         mvc.perform(patch("/users/1")
                         .content(mapper.writeValueAsString(user1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(400));
-    }
-
-    @Test
-    void updateUserWhen404IsReturned() throws Exception {
-        when(service.updateUser(anyLong(), any(User.class)))
-                .thenThrow(ElementNotFoundException.class);
-        mvc.perform(patch("/users/1")
-                        .content(mapper.writeValueAsString(user1))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(404));
-    }
-
-    @Test
-    void updateUserWhen409IsReturned() throws Exception {
-        when(service.updateUser(anyLong(), any(User.class)))
-                .thenThrow(EmailAlreadyExistsException.class);
-        mvc.perform(patch("/users/1")
-                        .content(mapper.writeValueAsString(user1))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(409));
     }
 
     @Test
@@ -194,6 +165,6 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        verify(service, times(1)).removeUserById(1L);
+        verify(client, times(1)).removeUserById(1L);
     }
 }

@@ -9,10 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
 import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
-import ru.practicum.shareit.exceptions.ValidationException;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserRepository;
-import ru.practicum.shareit.user.UserService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,27 +51,6 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenAddUserWhenUserNotExistsAndEmailIsNull() {
-        user1.setEmail(null);
-        ValidationException exception = assertThrows(ValidationException.class, () -> userService.addUser(user1));
-        assertTrue(exception.getMessage().contains("user.Email = null или состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddUserWhenUserNotExistsAndEmailIsBlank() {
-        user1.setEmail("");
-        ValidationException exception = assertThrows(ValidationException.class, () -> userService.addUser(user1));
-        assertTrue(exception.getMessage().contains("user.Email = null или состоит из пробелов."));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenAddUserWhenUserNotExistsAndEmailIsNotValid() {
-        user1.setEmail("show.me.now.");
-        ValidationException exception = assertThrows(ValidationException.class, () -> userService.addUser(user1));
-        assertTrue(exception.getMessage().contains("user.Email не в формате email."));
-    }
-
-    @Test
     void shouldThrowEmailAlreadyExistsExceptionWhenAddUserWhenUserIsExists() {
         when(userRepository.save(any(User.class)))
                 .thenThrow(DataIntegrityViolationException.class);
@@ -101,16 +76,6 @@ class UserServiceImplUnitTest {
         ElementNotFoundException exception = assertThrows(ElementNotFoundException.class,
                 () -> userService.getUserById(1L));
         assertTrue(exception.getMessage().contains("пользователь с id"));
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenUpdateUserWhenEmailIsNotValid() {
-        user2 = new User(2L, "John2", "show.me.now.");
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.ofNullable(user1));
-        ValidationException exception = assertThrows(ValidationException.class, () -> userService.updateUser(1L,
-                user2));
-        assertTrue(exception.getMessage().contains("user.Email не в формате email."));
     }
 
     @Test

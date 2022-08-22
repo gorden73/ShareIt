@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.booking;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +106,8 @@ public class BookingServiceImpl implements BookingService {
         int page1 = from / size;
         Pageable page = PageRequest.of(page1, size, Sort.by("start").descending());
         checkUserExists(bookerId);
-        switch (status) {
+        String status1 = status.toUpperCase();
+        switch (status1) {
             case ("ALL"):
                 log.info("Запрошен список всех бронирований арендатора id{}.", bookerId);
                 return bookingRepository.findBookingsByBooker_Id(bookerId, page);
@@ -121,8 +122,8 @@ public class BookingServiceImpl implements BookingService {
                 log.info("Запрошен список бронирований арендатора id{} со статусом FUTURE.", bookerId);
                 return bookingRepository.findByBooker_IdAndStartAfter(bookerId, LocalDateTime.now(), page);
         }
-        log.info("Запрошен список бронирований арендатора id{} со статусом {}.", bookerId, status);
-        return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(status), page);
+        log.info("Запрошен список бронирований арендатора id{} со статусом {}.", bookerId, status1);
+        return bookingRepository.findBookingsByBooker_IdAndStatus(bookerId, Status.valueOf(status1), page);
     }
 
     @Override
@@ -130,7 +131,8 @@ public class BookingServiceImpl implements BookingService {
         int page1 = from / size;
         Pageable page = PageRequest.of(page1, size, Sort.by("start").descending());
         checkUserExists(ownerId);
-        switch (status) {
+        String status1 = status.toUpperCase();
+        switch (status1) {
             case ("ALL"):
                 log.info("Запрошен список всех бронирований владельца id{}.", ownerId);
                 return bookingRepository.findBookingsByOwnerId(ownerId, page);
@@ -145,8 +147,8 @@ public class BookingServiceImpl implements BookingService {
                 log.info("Запрошен список бронирований владельца id{} со статусом FUTURE.", ownerId);
                 return bookingRepository.findByOwner_IdAndStartAfter(ownerId, LocalDateTime.now(), page);
         }
-        log.info("Запрошен список бронирований владельца id{} со статусом {}.", ownerId, status);
-        return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status), page);
+        log.info("Запрошен список бронирований владельца id{} со статусом {}.", ownerId, status1);
+        return bookingRepository.findBookingsByOwnerIdAndStatus(ownerId, Status.valueOf(status1), page);
     }
 
     private void checkUserExists(long userId) {

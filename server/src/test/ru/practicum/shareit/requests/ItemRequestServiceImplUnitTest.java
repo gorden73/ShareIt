@@ -8,13 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.exceptions.ElementNotFoundException;
-import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.item.dto.ItemOwnerDto;
-import ru.practicum.shareit.requests.ItemRequest;
-import ru.practicum.shareit.requests.ItemRequestRepository;
-import ru.practicum.shareit.requests.ItemRequestService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -78,14 +74,6 @@ class ItemRequestServiceImplUnitTest {
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenAddRequestWithEmptyDescription() {
-        request1.setDescription("");
-        ValidationException exception = assertThrows(ValidationException.class, () -> requestService.addRequest(2L,
-                request1));
-        assertTrue(exception.getMessage().contains("описание запроса пустое или состоит из пробелов."));
-    }
-
-    @Test
     void shouldThrowIllegalAccessErrorWhenAddRequestWhenUserNotFound() {
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
@@ -109,22 +97,6 @@ class ItemRequestServiceImplUnitTest {
                     hasProperty("created", notNullValue())
             )));
         }
-        verify(itemService, times(1)).checkUserById(1L);
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenGetAllItemRequestsByOtherUsersWhenFromLessThanZero() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> requestService.getAllItemRequestsByOtherUsers(1L, -1, 2));
-        assertTrue(exception.getMessage().contains("неверное значение from"));
-        verify(itemService, times(1)).checkUserById(1L);
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenGetAllItemRequestsByOtherUsersWhenSizeLessThanOne() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> requestService.getAllItemRequestsByOtherUsers(1L, 0, 0));
-        assertTrue(exception.getMessage().contains("неверное значение size"));
         verify(itemService, times(1)).checkUserById(1L);
     }
 

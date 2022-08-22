@@ -1,7 +1,6 @@
 package ru.practicum.shareit.requests;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.ValidationException;
@@ -24,8 +23,7 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public Object getAllItemRequestsByOwner(@RequestHeader("X-Sharer-User-Id")
-                                            @NotNull long userId) {
+    public Object getAllItemRequestsByOwner(@RequestHeader("X-Sharer-User-Id") @NotNull long userId) {
         return requestClient.getAllItemRequestsByOwner(userId);
     }
 

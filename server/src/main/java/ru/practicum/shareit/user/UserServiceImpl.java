@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.ElementNotFoundException;
-import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
+import ru.practicum.shareit.exception.ElementNotFoundException;
+import ru.practicum.shareit.exception.EmailAlreadyExistsException;
 
 import java.util.Collection;
 

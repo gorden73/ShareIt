@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>ru.practicum</groupId>
-		<artifactId>shareit</artifactId>
+		<artifactId>shareIt</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>shareit-server</artifactId>
+	<artifactId>shareIt-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<name>ShareIt Server</name>

@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>shareit</artifactId>
+        <artifactId>shareIt</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <artifactId>shareit-gateway</artifactId>
+    <artifactId>shareIt-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <name>ShareIt Gateway</name>
@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>shareit-server</artifactId>
+            <artifactId>shareIt-server</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 

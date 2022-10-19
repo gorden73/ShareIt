@@ -1,4 +1,4 @@
-package ru.practicum.shareit.requests;
+package ru.practicum.shareit.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,13 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.exceptions.ElementNotFoundException;
-import ru.practicum.shareit.exceptions.ValidationException;
-import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.ShareItGateway;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,9 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ItemRequestController.class)
+@ContextConfiguration(classes = ShareItGateway.class)
 class ItemRequestControllerTest {
     @MockBean
-    private ItemRequestService service;
+    private ItemRequestClient client;
 
     @Autowired
     private MockMvc mvc;
@@ -37,37 +41,31 @@ class ItemRequestControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    private User user1;
-    private User user2;
+    private UserDto user1;
+    private UserDto user2;
 
-    private Item item1;
+    private ItemDto item1;
 
-    private Item item2;
+    private ItemDto item2;
 
-    private ItemRequest request1;
+    private ItemRequestDto request1;
 
     @BeforeEach
     void setUp() {
-        user1 = new User(1L, "John1", "john.doe1@mail.com");
-        user2 = new User(2L, "John2", "john.doe2@mail.com");
+        user1 = new UserDto(1L, "John1", "john.doe1@mail.com");
+        user2 = new UserDto(2L, "John2", "john.doe2@mail.com");
 
-        item1 = new Item("Paper1", "Newspaper1", true, 0);
-        item1.setId(1L);
-        item1.setOwner(user1);
+        item1 = new ItemDto(1L, "Paper1", "Newspaper1", true, 0);
 
-        item2 = new Item("Paper2", "Newspaper2", true, 1);
-        item2.setId(2L);
-        item2.setOwner(user2);
+        item2 = new ItemDto(2L, "Paper2", "Newspaper2", true, 1);
 
-        request1 = new ItemRequest("Want something.");
-        request1.setId(1L);
+        request1 = new ItemRequestDto(1L, "Want something.", LocalDateTime.now(), null);
     }
 
     @Test
     void addRequestWhen200IsReturned() throws Exception {
-        when(service.addRequest(anyLong(), any(ItemRequest.class)))
+        when(client.addRequest(anyLong(), any(ItemRequestDto.class)))
                 .thenReturn(request1);
-        request1.setRequester(user1);
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(request1))
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -82,10 +80,8 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void addRequestWhen400IsReturned() throws Exception {
-        when(service.addRequest(anyLong(), any(ItemRequest.class)))
-                .thenThrow(ValidationException.class);
-        request1.setRequester(user1);
+    void addRequestWhenDescriptionInNullAnd400IsReturned() throws Exception {
+        request1.setDescription(null);
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(request1))
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -96,25 +92,22 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void addRequestWhen500IsReturned() throws Exception {
-        when(service.addRequest(anyLong(), any(ItemRequest.class)))
-                .thenThrow(IllegalAccessError.class);
-        request1.setRequester(user1);
+    void addRequestWhenDescriptionInBlankAnd400IsReturned() throws Exception {
+        request1.setDescription("");
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(request1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(500));
+                .andExpect(status().is(400));
     }
 
     @Test
     void getAllItemRequestsByOwnerWhen200IsReturned() throws Exception {
-        request1.setRequester(user1);
-        List<ItemRequest> requests = new ArrayList<>();
+        List<ItemRequestDto> requests = new ArrayList<>();
         requests.add(request1);
-        when(service.getAllItemRequestsByOwner(anyLong()))
+        when(client.getAllItemRequestsByOwner(anyLong()))
                 .thenReturn(requests);
         mvc.perform(get("/requests")
                         .content(mapper.writeValueAsString(requests))
@@ -131,27 +124,10 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllItemRequestsByOwnerWhen404IsReturned() throws Exception {
-        request1.setRequester(user1);
-        List<ItemRequest> requests = new ArrayList<>();
-        requests.add(request1);
-        when(service.getAllItemRequestsByOwner(anyLong()))
-                .thenThrow(ElementNotFoundException.class);
-        mvc.perform(get("/requests")
-                        .content(mapper.writeValueAsString(requests))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(404));
-    }
-
-    @Test
     void getAllItemRequestsByOtherUsersWhen200IsReturned() throws Exception {
-        request1.setRequester(user1);
-        List<ItemRequest> requests = new ArrayList<>();
+        List<ItemRequestDto> requests = new ArrayList<>();
         requests.add(request1);
-        when(service.getAllItemRequestsByOtherUsers(anyLong(), anyInt(), anyInt()))
+        when(client.getAllItemRequestsByOtherUsers(anyLong(), anyInt(), anyInt()))
                 .thenReturn(requests);
         mvc.perform(get("/requests/all")
                         .content(mapper.writeValueAsString(requests))
@@ -170,17 +146,33 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllItemRequestsByOtherUsersWhen400IsReturned() throws Exception {
-        request1.setRequester(user1);
-        List<ItemRequest> requests = new ArrayList<>();
+    void getAllItemRequestsByOtherUsersWhenFromIsNoPositiveAnd400IsReturned() throws Exception {
+        List<ItemRequestDto> requests = new ArrayList<>();
         requests.add(request1);
-        when(service.getAllItemRequestsByOtherUsers(anyLong(), anyInt(), anyInt()))
+        when(client.getAllItemRequestsByOtherUsers(anyLong(), anyInt(), anyInt()))
+                .thenThrow(ValidationException.class);
+        mvc.perform(get("/requests/all")
+                        .content(mapper.writeValueAsString(requests))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .param("from", "-1")
+                        .param("size", "1")
+                        .header("X-Sharer-User-Id", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(400));
+    }
+
+    @Test
+    void getAllItemRequestsByOtherUsersWhenSizeEqualsZeroAnd400IsReturned() throws Exception {
+        List<ItemRequestDto> requests = new ArrayList<>();
+        requests.add(request1);
+        when(client.getAllItemRequestsByOtherUsers(anyLong(), anyInt(), anyInt()))
                 .thenThrow(ValidationException.class);
         mvc.perform(get("/requests/all")
                         .content(mapper.writeValueAsString(requests))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .param("from", "0")
-                        .param("size", "1")
+                        .param("size", "0")
                         .header("X-Sharer-User-Id", 2)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -189,8 +181,7 @@ class ItemRequestControllerTest {
 
     @Test
     void getItemRequestByIdWhen200IsReturned() throws Exception {
-        request1.setRequester(user1);
-        when(service.getItemRequestById(anyLong(), anyLong()))
+        when(client.getItemRequestById(anyLong(), anyLong()))
                 .thenReturn(request1);
         mvc.perform(get("/requests/1")
                         .content(mapper.writeValueAsString(request1))
@@ -203,19 +194,5 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.description", is(request1.getDescription())))
                 .andExpect(jsonPath("$.created", is(notNullValue())))
                 .andExpect(jsonPath("$.items", is(nullValue())));
-    }
-
-    @Test
-    void getItemRequestByIdWhen404IsReturned() throws Exception {
-        request1.setRequester(user1);
-        when(service.getItemRequestById(anyLong(), anyLong()))
-                .thenThrow(ElementNotFoundException.class);
-        mvc.perform(get("/requests/1")
-                        .content(mapper.writeValueAsString(request1))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .header("X-Sharer-User-Id", 2)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(404));
     }
 }

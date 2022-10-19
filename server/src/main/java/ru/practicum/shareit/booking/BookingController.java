@@ -2,8 +2,8 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.dto.BookingDto;
-import ru.practicum.shareit.dto.BookingMapper;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 
 import java.util.Collection;
 import java.util.stream.Collectors;

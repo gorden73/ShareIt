@@ -11,4 +11,4 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
-!/src/main/resources/data.sql
+server/src/main/resources/data.sql
